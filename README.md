@@ -2,6 +2,9 @@
 
 PocketFlow is a multi-wallet finance tracker built with Expo React Native, Next.js API routes, Supabase PostgreSQL/Auth, and Drizzle ORM.
 
+Live API: https://pocketflow-seven.vercel.app
+GitHub: https://github.com/dzikrirazzan/pocketflow
+
 ## Apps
 
 - `apps/mobile`: Expo app for iOS via Expo Go.
