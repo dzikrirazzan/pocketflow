@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "PocketFlow",
+    "slug": "pocketflow",
+    "scheme": "pocketflow",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#f8fafc"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pocketflow.app"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
