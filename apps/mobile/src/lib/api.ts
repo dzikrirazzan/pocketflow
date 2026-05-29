@@ -98,9 +98,17 @@ export const api = {
     if (demoMode) return { ok: true };
     return request(`/api/wallets/${id}`, { method: "DELETE" });
   },
+  async updateWallet(id: string, input: Record<string, unknown>) {
+    if (demoMode) return { wallet: { id, ...input } };
+    return request(`/api/wallets/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+  },
   async deleteBudget(id: string) {
     if (demoMode) return { ok: true };
     return request(`/api/budgets/${id}`, { method: "DELETE" });
+  },
+  async updateBudget(id: string, input: Record<string, unknown>) {
+    if (demoMode) return { budget: { id, ...input } };
+    return request(`/api/budgets/${id}`, { method: "PATCH", body: JSON.stringify(input) });
   },
   async deleteCategory(id: string) {
     if (demoMode) return { ok: true };

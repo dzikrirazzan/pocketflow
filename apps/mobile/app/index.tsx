@@ -24,13 +24,19 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [loadingData, setLoadingData] = useState(false);
 
-  // Filters
+  // Date period filters
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly" | "yearly" | "custom">("monthly");
   const [startDate, setStartDate] = useState(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
   const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
 
   // Interactive Chart Tooltip State
   const [selectedBar, setSelectedBar] = useState<(ChartBucket & { index: number }) | null>(null);
+
+  // Advanced Search, Filter & Sort States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "income" | "expense" | "transfer">("all");
+  const [filterWalletId, setFilterWalletId] = useState<"all" | string>("all");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "highest" | "lowest">("newest");
 
   useEffect(() => {
     load(period, startDate, endDate, true);
@@ -66,7 +72,6 @@ export default function HomeScreen() {
       setTransactions(transactionData.transactions);
       setSummary(summaryData);
       
-      // Reset selected bar when period or data changes
       setSelectedBar(null);
     } catch (err: any) {
       Alert.alert("Error", err.message || "Failed to load data");
@@ -82,7 +87,6 @@ export default function HomeScreen() {
   }
 
   function handleApplyCustomRange() {
-    // Simple custom date format validation YYYY-MM-DD
     const regex = /^\d{4}-\d{2}-\d{2}$/;
     if (!regex.test(startDate) || !regex.test(endDate)) {
       Alert.alert("Validasi Gagal", "Format tanggal harus YYYY-MM-DD");
@@ -218,6 +222,54 @@ export default function HomeScreen() {
 
   const chartMaxVal = Math.max(...chartBuckets.map(b => Math.max(b.income, b.expense)), 1);
 
+  // Apply Real-time Searching, Filtering and Sorting
+  const filteredAndSortedTransactions = transactions
+    .filter((tx) => {
+      // 1. Search Query
+      const q = searchQuery.toLowerCase().trim();
+      if (q) {
+        const noteMatch = (tx.note || "").toLowerCase().includes(q);
+        const typeMatch = tx.type.toLowerCase().includes(q);
+        const walletName = wallets.find(w => w.id === tx.walletId)?.name || "";
+        const walletMatch = walletName.toLowerCase().includes(q);
+        const catName = tx.categoryId
+          ? summary?.byCategory.find((c) => c.categoryId === tx.categoryId)?.categoryName || ""
+          : "";
+        const catMatch = catName.toLowerCase().includes(q);
+
+        if (!noteMatch && !typeMatch && !walletMatch && !catMatch) {
+          return false;
+        }
+      }
+
+      // 2. Type Filter
+      if (filterType !== "all" && tx.type !== filterType) {
+        return false;
+      }
+
+      // 3. Wallet Filter
+      if (filterWalletId !== "all" && tx.walletId !== filterWalletId) {
+        return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortOrder === "newest") {
+        return new Date(b.happenedAt).getTime() - new Date(a.happenedAt).getTime();
+      }
+      if (sortOrder === "oldest") {
+        return new Date(a.happenedAt).getTime() - new Date(b.happenedAt).getTime();
+      }
+      if (sortOrder === "highest") {
+        return Number(b.amount) - Number(a.amount);
+      }
+      if (sortOrder === "lowest") {
+        return Number(a.amount) - Number(b.amount);
+      }
+      return 0;
+    });
+
   if (loading) {
     return (
       <Screen>
@@ -292,7 +344,7 @@ export default function HomeScreen() {
 
             <View style={styles.chartArea}>
               {chartBuckets.map((bucket, idx) => {
-                const incHeight = (bucket.income / chartMaxVal) * 90; // scale max to 90%
+                const incHeight = (bucket.income / chartMaxVal) * 90;
                 const expHeight = (bucket.expense / chartMaxVal) * 90;
                 const isSelected = selectedBar?.index === idx;
 
@@ -366,7 +418,7 @@ export default function HomeScreen() {
         )}
       </Card>
 
-      {/* Wallets Section */}
+      {/* My Wallets Breakdown */}
       <Text style={styles.sectionTitle}>My Wallets</Text>
       <View style={styles.walletGrid}>
         {wallets.length === 0 ? (
@@ -381,23 +433,96 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Transactions Section */}
-      <Text style={styles.sectionTitle}>Recent Transactions</Text>
-      {transactions.length === 0 ? (
+      {/* Advanced Transaction List Header with Search, Filter & Sort */}
+      <View style={styles.sectionHeaderRow}>
+        <Text style={styles.sectionTitle}>Recent Transactions</Text>
+        <Text style={styles.badgeCount}>
+          {filteredAndSortedTransactions.length} items
+        </Text>
+      </View>
+
+      <Card>
+        <View style={styles.searchFilterWrap}>
+          {/* Search Box */}
+          <Field
+            label=""
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Cari catatan, wallet, kategori..."
+          />
+
+          {/* Type Filter Row */}
+          <Text style={styles.subFilterLabel}>Tipe Transaksi:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+            {(["all", "income", "expense", "transfer"] as const).map((typeOpt) => (
+              <TouchableOpacity
+                key={typeOpt}
+                onPress={() => setFilterType(typeOpt)}
+                style={[styles.pill, filterType === typeOpt && styles.pillActive]}
+              >
+                <Text style={[styles.pillText, filterType === typeOpt && styles.pillTextActive]}>
+                  {typeOpt === "all" ? "Semua Tipe" : typeOpt}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* Wallet Filter Row */}
+          <Text style={styles.subFilterLabel}>Pilih Wallet:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+            <TouchableOpacity
+              onPress={() => setFilterWalletId("all")}
+              style={[styles.pill, filterWalletId === "all" && styles.pillActive]}
+            >
+              <Text style={[styles.pillText, filterWalletId === "all" && styles.pillTextActive]}>
+                Semua Dompet
+              </Text>
+            </TouchableOpacity>
+            {wallets.map((w) => (
+              <TouchableOpacity
+                key={w.id}
+                onPress={() => setFilterWalletId(w.id)}
+                style={[styles.pill, filterWalletId === w.id && styles.pillActive]}
+              >
+                <Text style={[styles.pillText, filterWalletId === w.id && styles.pillTextActive]}>
+                  {w.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* Sorting Row */}
+          <Text style={styles.subFilterLabel}>Urutkan Berdasarkan:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+            {(["newest", "oldest", "highest", "lowest"] as const).map((sortOpt) => (
+              <TouchableOpacity
+                key={sortOpt}
+                onPress={() => setSortOrder(sortOpt)}
+                style={[styles.pill, sortOrder === sortOpt && styles.pillActive]}
+              >
+                <Text style={[styles.pillText, sortOrder === sortOpt && styles.pillTextActive]}>
+                  {sortOpt === "newest" ? "Terbaru" : sortOpt === "oldest" ? "Terlama" : sortOpt === "highest" ? "Nominal Terbesar" : "Nominal Terkecil"}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </Card>
+
+      {/* Render Transactions List */}
+      {filteredAndSortedTransactions.length === 0 ? (
         <Card>
           <View style={styles.emptyCenter}>
             <Ionicons name="receipt-outline" size={48} color={colors.muted} />
-            <Text style={styles.emptyText}>Belum ada transaksi di periode ini.</Text>
+            <Text style={styles.emptyText}>Tidak ada transaksi yang cocok.</Text>
           </View>
         </Card>
       ) : (
-        transactions.map((transaction) => {
-          // Gracefully fallback on missing category
+        filteredAndSortedTransactions.map((transaction) => {
           const categoryName = transaction.categoryId
             ? summary?.byCategory.find((c) => c.categoryId === transaction.categoryId)?.categoryName || "Category"
             : null;
           
-          // Gracefully fallback on missing wallet
           const walletName = transaction.walletId
             ? wallets.find(w => w.id === transaction.walletId)?.name || "Wallet"
             : null;
@@ -504,4 +629,15 @@ const styles = StyleSheet.create({
   rightActionRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   actionButtons: { flexDirection: "row", gap: 4 },
   actionBtn: { padding: 6, borderRadius: 6, backgroundColor: "#f1f5f9" },
+
+  // Advanced Search & Filter UX
+  sectionHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 },
+  badgeCount: { backgroundColor: "#e2e8f0", color: colors.muted, fontWeight: "800", fontSize: 12, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  searchFilterWrap: { gap: 10 },
+  subFilterLabel: { color: colors.ink, fontWeight: "800", fontSize: 13, marginTop: 4 },
+  chipScroll: { flexDirection: "row", gap: 8 },
+  pill: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: "#f1f5f9", borderWidth: 1, borderColor: colors.line, marginRight: 6 },
+  pillActive: { backgroundColor: colors.ink, borderColor: colors.ink },
+  pillText: { color: colors.muted, fontWeight: "700", fontSize: 12, textTransform: "capitalize" },
+  pillTextActive: { color: "#fff" },
 });
