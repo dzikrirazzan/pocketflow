@@ -21,7 +21,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(await response.text());
+    const text = await response.text();
+    let message = "Request failed";
+    try {
+      const json = JSON.parse(text);
+      message = json.error || json.message || message;
+    } catch {
+      message = text || message;
+    }
+    throw new Error(message);
   }
 
   return response.json();
@@ -40,13 +48,31 @@ export const api = {
     if (demoMode) return { budgets: demoBudgets };
     return request<{ budgets: typeof demoBudgets }>("/api/budgets");
   },
-  async transactions(period = "monthly") {
+  async transactions(options: string | { period?: string; date?: string; startDate?: string; endDate?: string } = "monthly") {
     if (demoMode) return { transactions: demoTransactions };
-    return request<{ transactions: typeof demoTransactions }>(`/api/transactions?period=${period}`);
+    const params = new URLSearchParams();
+    if (typeof options === "string") {
+      params.append("period", options);
+    } else {
+      if (options.period) params.append("period", options.period);
+      if (options.date) params.append("date", options.date);
+      if (options.startDate) params.append("startDate", options.startDate);
+      if (options.endDate) params.append("endDate", options.endDate);
+    }
+    return request<{ transactions: typeof demoTransactions }>(`/api/transactions?${params.toString()}`);
   },
-  async summary(period = "monthly") {
+  async summary(options: string | { period?: string; date?: string; startDate?: string; endDate?: string } = "monthly") {
     if (demoMode) return demoSummary;
-    return request<typeof demoSummary>(`/api/reports/summary?period=${period}`);
+    const params = new URLSearchParams();
+    if (typeof options === "string") {
+      params.append("period", options);
+    } else {
+      if (options.period) params.append("period", options.period);
+      if (options.date) params.append("date", options.date);
+      if (options.startDate) params.append("startDate", options.startDate);
+      if (options.endDate) params.append("endDate", options.endDate);
+    }
+    return request<typeof demoSummary>(`/api/reports/summary?${params.toString()}`);
   },
   async createWallet(input: { name: string; type: string; balance: number; color: string }) {
     if (demoMode) return { wallet: { id: String(Date.now()), currency: "IDR", ...input, balance: String(input.balance) } };
@@ -59,5 +85,25 @@ export const api = {
   async createTransaction(input: Record<string, unknown>) {
     if (demoMode) return { transaction: { id: String(Date.now()), ...input } };
     return request("/api/transactions", { method: "POST", body: JSON.stringify(input) });
-  }
+  },
+  async deleteTransaction(id: string) {
+    if (demoMode) return { ok: true };
+    return request(`/api/transactions/${id}`, { method: "DELETE" });
+  },
+  async updateTransaction(id: string, input: Record<string, unknown>) {
+    if (demoMode) return { transaction: { id, ...input } };
+    return request(`/api/transactions/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+  },
+  async deleteWallet(id: string) {
+    if (demoMode) return { ok: true };
+    return request(`/api/wallets/${id}`, { method: "DELETE" });
+  },
+  async deleteBudget(id: string) {
+    if (demoMode) return { ok: true };
+    return request(`/api/budgets/${id}`, { method: "DELETE" });
+  },
+  async deleteCategory(id: string) {
+    if (demoMode) return { ok: true };
+    return request(`/api/categories/${id}`, { method: "DELETE" });
+  },
 };

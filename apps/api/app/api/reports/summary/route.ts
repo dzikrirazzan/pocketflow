@@ -10,7 +10,12 @@ export async function GET(request: Request) {
   try {
     const user = await requireUser(request);
     const url = new URL(request.url);
-    const { start, end } = periodRange(url.searchParams.get("period"), url.searchParams.get("date"));
+    const { start, end } = periodRange(
+      url.searchParams.get("period"),
+      url.searchParams.get("date"),
+      url.searchParams.get("startDate"),
+      url.searchParams.get("endDate")
+    );
 
     const totals = await db
       .select({

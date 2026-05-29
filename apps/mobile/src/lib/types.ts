@@ -41,7 +41,7 @@ export type Summary = {
     expense: number;
     net: number;
   };
-  byCategory: Array<{ categoryName: string | null; color: string | null; total: string }>;
+  byCategory: Array<{ categoryId?: string | null; categoryName: string | null; color: string | null; total: string }>;
   byWallet: Array<{ walletName: string | null; color: string | null; total: string }>;
   budgetUsage: Array<{ budgetId: string; name: string; amount: string; period: string; used: string }>;
 };

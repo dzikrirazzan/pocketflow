@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Field } from "@/components/Field";
@@ -10,19 +11,45 @@ import { parseRupiahInput } from "@/lib/format";
 import { Budget, Category, Wallet } from "@/lib/types";
 import { colors } from "@/theme/colors";
 
-export default function AddScreen() {
-  const [type, setType] = useState<"expense" | "income" | "transfer">("expense");
+export default function EditScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{
+    id: string;
+    type: "expense" | "income" | "transfer";
+    amount: string;
+    note: string;
+    walletId: string;
+    targetWalletId: string;
+    categoryId: string;
+    budgetId: string;
+    happenedAt: string;
+  }>();
+
+  const [type, setType] = useState<"expense" | "income" | "transfer">(params.type || "expense");
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [walletId, setWalletId] = useState("");
-  const [targetWalletId, setTargetWalletId] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [budgetId, setBudgetId] = useState("");
+  const [walletId, setWalletId] = useState(params.walletId || "");
+  const [targetWalletId, setTargetWalletId] = useState(params.targetWalletId || "");
+  const [categoryId, setCategoryId] = useState(params.categoryId || "");
+  const [budgetId, setBudgetId] = useState(params.budgetId || "");
+  
+  // Format initial amount
+  const initialAmountVal = params.amount ? Math.round(Number(params.amount)) : 0;
   const [displayAmount, setDisplayAmount] = useState("");
-  const [rawAmount, setRawAmount] = useState(0);
-  const [note, setNote] = useState("");
+  const [rawAmount, setRawAmount] = useState(initialAmountVal);
+  const [note, setNote] = useState(params.note || "");
   const [saving, setSaving] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
+
+  // Initialize display amount
+  useEffect(() => {
+    if (params.amount) {
+      const { display, raw } = parseRupiahInput(Math.round(Number(params.amount)).toString());
+      setDisplayAmount(display);
+      setRawAmount(raw);
+    }
+  }, [params.amount]);
 
   useEffect(() => {
     async function fetchData() {
@@ -35,24 +62,33 @@ export default function AddScreen() {
         setWallets(walletData.wallets);
         setCategories(categoryData.categories);
         setBudgets(budgetData.budgets);
-        setWalletId(walletData.wallets[0]?.id ?? "");
-        setTargetWalletId(walletData.wallets[1]?.id ?? "");
-        const firstExpenseCategory = categoryData.categories.find((c) => c.kind === "expense");
-        setCategoryId(firstExpenseCategory?.id ?? "");
-        setBudgetId("");
+        
+        if (!walletId && walletData.wallets.length > 0) {
+          setWalletId(walletData.wallets[0].id);
+        }
+        if (!targetWalletId && walletData.wallets.length > 1) {
+          setTargetWalletId(walletData.wallets[1].id);
+        }
       } catch (err: any) {
         Alert.alert("Error", err.message || "Failed to load form data");
+      } finally {
+        setLoadingData(false);
       }
     }
     fetchData();
   }, []);
 
-  // Auto-select first matching category when type changes
+  // Auto-select first matching category when type changes, but ONLY if we switch type
   useEffect(() => {
     if (type === "transfer") return;
     const kind = type === "expense" ? "expense" : "income";
-    const firstMatch = categories.find((c) => c.kind === kind);
-    setCategoryId(firstMatch?.id ?? "");
+    
+    // Only auto-select if current category is not matching new type
+    const currentCat = categories.find(c => c.id === categoryId);
+    if (!currentCat || currentCat.kind !== kind) {
+      const firstMatch = categories.find((c) => c.kind === kind);
+      setCategoryId(firstMatch?.id ?? "");
+    }
   }, [type, categories]);
 
   function handleAmountChange(text: string) {
@@ -73,7 +109,7 @@ export default function AddScreen() {
 
     setSaving(true);
     try {
-      await api.createTransaction({
+      await api.updateTransaction(params.id, {
         type,
         amount: rawAmount,
         walletId,
@@ -81,14 +117,14 @@ export default function AddScreen() {
         categoryId: type === "transfer" ? null : categoryId || null,
         budgetId: type === "expense" ? budgetId || null : null,
         note,
-        happenedAt: new Date().toISOString(),
+        happenedAt: params.happenedAt || new Date().toISOString(),
       });
-      setDisplayAmount("");
-      setRawAmount(0);
-      setNote("");
-      Alert.alert("Transaction saved", "Transaksi sudah masuk.");
+      
+      Alert.alert("Transaction updated", "Transaksi berhasil diperbarui.", [
+        { text: "OK", onPress: () => router.replace("/") }
+      ]);
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Gagal menyimpan transaksi");
+      Alert.alert("Error", err.message || "Gagal memperbarui transaksi");
     } finally {
       setSaving(false);
     }
@@ -97,8 +133,8 @@ export default function AddScreen() {
   return (
     <Screen>
       <View>
-        <Text style={styles.title}>Add Transaction</Text>
-        <Text style={styles.subtitle}>Catat uang masuk, keluar, atau pindah dompet.</Text>
+        <Text style={styles.title}>Edit Transaction</Text>
+        <Text style={styles.subtitle}>Ubah detail transaksi kamu.</Text>
       </View>
 
       <Card>
@@ -168,7 +204,14 @@ export default function AddScreen() {
         </>
       ) : null}
 
-      <Button label="Save Transaction" onPress={save} loading={saving} disabled={saving} />
+      <View style={styles.buttonRow}>
+        <View style={{ flex: 1 }}>
+          <Button label="Cancel" onPress={() => router.back()} tone="soft" disabled={saving} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Button label="Save Changes" onPress={save} loading={saving} disabled={saving} />
+        </View>
+      </View>
     </Screen>
   );
 }
@@ -177,10 +220,11 @@ const styles = StyleSheet.create({
   title: { color: colors.ink, fontSize: 28, fontWeight: "900" },
   subtitle: { color: colors.muted, marginTop: 6 },
   form: { gap: 12 },
-  section: { color: colors.ink, fontWeight: "900", fontSize: 16 },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  section: { color: colors.ink, fontWeight: "900", fontSize: 16, marginTop: 16 },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
   chip: { paddingHorizontal: 12, height: 38, borderRadius: 8, borderWidth: 1, borderColor: colors.line, justifyContent: "center", backgroundColor: "#fff" },
   active: { backgroundColor: colors.ink, borderColor: colors.ink },
   chipText: { color: colors.muted, fontWeight: "800" },
   activeText: { color: "#fff" },
+  buttonRow: { flexDirection: "row", gap: 12, marginTop: 24, marginBottom: 40 },
 });
