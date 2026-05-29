@@ -6,8 +6,11 @@ import { budgetInput } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function PATCH(request: Request, { params }: RouteContext) {
   try {
+    const { id } = await params;
     const user = await requireUser(request);
     const input = budgetInput.partial().parse(await request.json());
     const [budget] = await db
@@ -16,7 +19,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         ...input,
         amount: input.amount === undefined ? undefined : input.amount.toFixed(2)
       })
-      .where(and(eq(budgets.id, params.id), eq(budgets.userId, user.id)))
+      .where(and(eq(budgets.id, id), eq(budgets.userId, user.id)))
       .returning();
 
     return Response.json({ budget });
@@ -25,10 +28,11 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: RouteContext) {
   try {
+    const { id } = await params;
     const user = await requireUser(request);
-    await db.update(budgets).set({ isActive: false }).where(and(eq(budgets.id, params.id), eq(budgets.userId, user.id)));
+    await db.update(budgets).set({ isActive: false }).where(and(eq(budgets.id, id), eq(budgets.userId, user.id)));
     return Response.json({ ok: true });
   } catch (error) {
     return authErrorResponse(error);

@@ -11,5 +11,8 @@
     "dev:mobile": "npm --workspace apps/mobile run start",
     "build:api": "npm --workspace apps/api run build",
     "typecheck": "npm --workspaces run typecheck"
+  },
+  "devDependencies": {
+    "expo": "~54.0.35"
   }
 }

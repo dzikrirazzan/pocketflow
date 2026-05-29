@@ -6,14 +6,17 @@ import { categoryInput } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function PATCH(request: Request, { params }: RouteContext) {
   try {
+    const { id } = await params;
     const user = await requireUser(request);
     const input = categoryInput.partial().parse(await request.json());
     const [category] = await db
       .update(categories)
       .set(input)
-      .where(and(eq(categories.id, params.id), eq(categories.userId, user.id)))
+      .where(and(eq(categories.id, id), eq(categories.userId, user.id)))
       .returning();
 
     return Response.json({ category });
@@ -22,10 +25,11 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: RouteContext) {
   try {
+    const { id } = await params;
     const user = await requireUser(request);
-    await db.delete(categories).where(and(eq(categories.id, params.id), eq(categories.userId, user.id)));
+    await db.delete(categories).where(and(eq(categories.id, id), eq(categories.userId, user.id)));
     return Response.json({ ok: true });
   } catch (error) {
     return authErrorResponse(error);
