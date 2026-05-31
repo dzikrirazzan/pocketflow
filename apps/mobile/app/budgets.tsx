@@ -9,9 +9,10 @@ import { Segmented } from "@/components/Segmented";
 import { api } from "@/lib/api";
 import { rupiah, parseRupiahInput } from "@/lib/format";
 import { Budget, Summary } from "@/lib/types";
-import { colors } from "@/theme/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function BudgetsScreen() {
+  const { colors, theme } = useTheme();
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [name, setName] = useState("");
@@ -156,14 +157,14 @@ export default function BudgetsScreen() {
 
   return (
     <Screen>
-      <View>
-        <Text style={styles.title}>Budgets</Text>
-        <Text style={styles.subtitle}>Bikin batas harian, mingguan, atau bulanan.</Text>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.ink }]}>Budgets</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>Bikin batas harian, mingguan, atau bulanan.</Text>
       </View>
 
       <Card>
         <View style={styles.form}>
-          <Text style={styles.formHeader}>
+          <Text style={[styles.formHeader, { color: colors.ink }]}>
             {editingBudget ? `Edit Budget: ${editingBudget.name}` : "Buat Budget Baru"}
           </Text>
 
@@ -174,8 +175,8 @@ export default function BudgetsScreen() {
             value={name} 
             onChangeText={handleNameChange} 
             placeholder="Makan Bulanan" 
+            error={nameError}
           />
-          {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
           
           <Field
             label="Limit"
@@ -183,18 +184,18 @@ export default function BudgetsScreen() {
             onChangeText={handleAmountChange}
             keyboardType="numeric"
             placeholder="1.500.000"
+            error={amountError}
           />
-          {amountError ? <Text style={styles.errorText}>{amountError}</Text> : null}
           
           <View style={styles.buttonRow}>
             {editingBudget && (
               <View style={{ flex: 1 }}>
-                <Button label="Cancel" onPress={cancelEdit} tone="soft" disabled={adding} />
+                <Button label="Batal" onPress={cancelEdit} tone="soft" disabled={adding} />
               </View>
             )}
             <View style={{ flex: 1 }}>
               <Button 
-                label={editingBudget ? "Save Changes" : "Add Budget"} 
+                label={editingBudget ? "Simpan Perubahan" : "Add Budget"} 
                 onPress={saveBudget} 
                 loading={adding} 
                 disabled={adding} 
@@ -207,7 +208,7 @@ export default function BudgetsScreen() {
       {budgets.length === 0 ? (
         <View style={styles.emptyCenter}>
           <Ionicons name="pie-chart-outline" size={48} color={colors.muted} />
-          <Text style={styles.emptyText}>Belum ada budget. Silakan tambahkan budget baru di atas.</Text>
+          <Text style={[styles.emptyText, { color: colors.muted }]}>Belum ada budget. Silakan tambahkan budget baru di atas.</Text>
         </View>
       ) : (
         budgets.map((budget) => {
@@ -222,26 +223,26 @@ export default function BudgetsScreen() {
             <Card key={budget.id}>
               <View style={styles.row}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.name}>{budget.name}</Text>
-                  <Text style={styles.meta}>{budget.period}</Text>
+                  <Text style={[styles.name, { color: colors.ink }]}>{budget.name}</Text>
+                  <Text style={[styles.meta, { color: colors.muted }]}>{budget.period}</Text>
                 </View>
                 <View style={styles.rightInfo}>
-                  <Text style={styles.amount}>
+                  <Text style={[styles.amount, { color: colors.teal }]}>
                     {isOverspent ? "Overspent " : "Remaining "}
                     {rupiah(Math.abs(limit - used))}
                   </Text>
                   
                   <View style={styles.actionRow}>
-                    <TouchableOpacity onPress={() => startEditBudget(budget)} style={styles.actionBtn}>
-                      <Ionicons name="pencil-outline" size={18} color={colors.ink} />
+                    <TouchableOpacity onPress={() => startEditBudget(budget)} style={[styles.actionBtn, { backgroundColor: theme === "light" ? "#f1f5f9" : "#2c2c2e" }]}>
+                      <Ionicons name="pencil-outline" size={16} color={colors.ink} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDeleteBudget(budget.id, budget.name)} style={styles.deleteBtn}>
-                      <Ionicons name="trash-outline" size={18} color={colors.red} />
+                    <TouchableOpacity onPress={() => handleDeleteBudget(budget.id, budget.name)} style={[styles.deleteBtn, { backgroundColor: theme === "light" ? "#fef2f2" : "#3b1e1e" }]}>
+                      <Ionicons name="trash-outline" size={16} color={colors.red} />
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
-              <View style={styles.track}>
+              <View style={[styles.track, { backgroundColor: theme === "light" ? "#e2e8f0" : "#2c2c2e" }]}>
                 <View 
                   style={[
                     styles.fill, 
@@ -253,7 +254,7 @@ export default function BudgetsScreen() {
                 />
               </View>
               <View style={styles.footerRow}>
-                <Text style={styles.meta}>
+                <Text style={[styles.meta, { color: colors.muted }]}>
                   Used {rupiah(used)} of {rupiah(limit)}
                 </Text>
                 {isOverspent ? (
@@ -271,25 +272,25 @@ export default function BudgetsScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { color: colors.ink, fontSize: 28, fontWeight: "900" },
-  subtitle: { color: colors.muted, marginTop: 6 },
+  header: { marginBottom: 4 },
+  title: { fontSize: 32, fontWeight: "800", letterSpacing: -0.8 },
+  subtitle: { fontSize: 16, marginTop: 4, letterSpacing: -0.24 },
   form: { gap: 12 },
-  formHeader: { color: colors.ink, fontWeight: "900", fontSize: 16, marginBottom: 4 },
+  formHeader: { fontWeight: "800", fontSize: 16, marginBottom: 4, letterSpacing: -0.15 },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
-  name: { color: colors.ink, fontWeight: "900" },
-  meta: { color: colors.muted, marginTop: 5, textTransform: "capitalize" },
-  amount: { color: colors.teal, fontWeight: "900" },
+  name: { fontWeight: "700", fontSize: 16, letterSpacing: -0.2 },
+  meta: { marginTop: 3, textTransform: "capitalize", fontSize: 12, fontWeight: "500" },
+  amount: { fontWeight: "800", fontSize: 14, letterSpacing: -0.2 },
   rightInfo: { flexDirection: "row", alignItems: "center", gap: 12 },
   actionRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  actionBtn: { padding: 6, borderRadius: 6, backgroundColor: "#f1f5f9" },
-  deleteBtn: { padding: 6, borderRadius: 6, backgroundColor: "#fef2f2" },
-  track: { height: 10, borderRadius: 5, backgroundColor: "#e2e8f0", overflow: "hidden", marginTop: 14 },
+  actionBtn: { padding: 6, borderRadius: 6 },
+  deleteBtn: { padding: 6, borderRadius: 6 },
+  track: { height: 10, borderRadius: 5, overflow: "hidden", marginTop: 14 },
   fill: { height: "100%" },
-  errorText: { color: colors.red, fontSize: 12, fontWeight: "700", marginTop: -6 },
   buttonRow: { flexDirection: "row", gap: 10, marginTop: 6 },
   emptyCenter: { alignItems: "center", justifyContent: "center", paddingVertical: 40, gap: 10 },
-  emptyText: { color: colors.muted, fontWeight: "600", fontSize: 14, textAlign: "center", paddingHorizontal: 20 },
+  emptyText: { fontWeight: "600", fontSize: 14, textAlign: "center", paddingHorizontal: 20 },
   footerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 6 },
-  overspentWarning: { color: colors.red, fontWeight: "800", fontSize: 12 },
-  warningWarning: { color: "#d97706", fontWeight: "800", fontSize: 12 },
+  overspentWarning: { color: "#ff3b30", fontWeight: "800", fontSize: 12, letterSpacing: -0.15 },
+  warningWarning: { color: "#d97706", fontWeight: "800", fontSize: 12, letterSpacing: -0.15 },
 });

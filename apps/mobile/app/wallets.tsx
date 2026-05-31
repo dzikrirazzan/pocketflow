@@ -8,9 +8,10 @@ import { Screen } from "@/components/Screen";
 import { api } from "@/lib/api";
 import { rupiah, parseRupiahInput } from "@/lib/format";
 import { Wallet } from "@/lib/types";
-import { colors } from "@/theme/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function WalletsScreen() {
+  const { colors, theme } = useTheme();
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [name, setName] = useState("");
   const [displayBalance, setDisplayBalance] = useState("");
@@ -98,7 +99,7 @@ export default function WalletsScreen() {
           name,
           type: "cash",
           balance: rawBalance,
-          color: "#0f766e",
+          color: "#007aff",
         });
         Alert.alert("Wallet saved", "Dompet baru sudah siap dipakai.");
       }
@@ -149,14 +150,14 @@ export default function WalletsScreen() {
 
   return (
     <Screen>
-      <View>
-        <Text style={styles.title}>Wallets</Text>
-        <Text style={styles.subtitle}>Pisahkan cash, bank, e-wallet, dan tabungan.</Text>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.ink }]}>Wallets</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>Pisahkan cash, bank, e-wallet, dan tabungan.</Text>
       </View>
 
       <Card>
         <View style={styles.form}>
-          <Text style={styles.formHeader}>
+          <Text style={[styles.formHeader, { color: colors.ink }]}>
             {editingWallet ? `Edit Wallet: ${editingWallet.name}` : "Tambahkan Wallet Baru"}
           </Text>
           
@@ -165,8 +166,8 @@ export default function WalletsScreen() {
             value={name} 
             onChangeText={handleNameChange} 
             placeholder="BCA, Cash, GoPay" 
+            error={nameError}
           />
-          {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
           
           <Field
             label={editingWallet ? "Adjust balance" : "Starting balance"}
@@ -174,18 +175,18 @@ export default function WalletsScreen() {
             onChangeText={handleBalanceChange}
             keyboardType="numeric"
             placeholder="0"
+            error={balanceError}
           />
-          {balanceError ? <Text style={styles.errorText}>{balanceError}</Text> : null}
           
           <View style={styles.buttonRow}>
             {editingWallet && (
               <View style={{ flex: 1 }}>
-                <Button label="Cancel" onPress={cancelEdit} tone="soft" disabled={adding} />
+                <Button label="Batal" onPress={cancelEdit} tone="soft" disabled={adding} />
               </View>
             )}
             <View style={{ flex: 1 }}>
               <Button 
-                label={editingWallet ? "Save Changes" : "Add Wallet"} 
+                label={editingWallet ? "Simpan Perubahan" : "Add Wallet"} 
                 onPress={saveWallet} 
                 loading={adding} 
                 disabled={adding} 
@@ -198,7 +199,7 @@ export default function WalletsScreen() {
       {wallets.length === 0 ? (
         <View style={styles.emptyCenter}>
           <Ionicons name="wallet-outline" size={48} color={colors.muted} />
-          <Text style={styles.emptyText}>Belum ada wallet. Silakan tambahkan wallet baru di atas.</Text>
+          <Text style={[styles.emptyText, { color: colors.muted }]}>Belum ada wallet. Silakan tambahkan wallet baru di atas.</Text>
         </View>
       ) : (
         wallets.map((wallet) => (
@@ -206,17 +207,17 @@ export default function WalletsScreen() {
             <View style={styles.row}>
               <View style={[styles.dot, { backgroundColor: wallet.color }]} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{wallet.name}</Text>
-                <Text style={styles.meta}>{wallet.type}</Text>
+                <Text style={[styles.name, { color: colors.ink }]}>{wallet.name}</Text>
+                <Text style={[styles.meta, { color: colors.muted }]}>{wallet.type}</Text>
               </View>
-              <Text style={styles.amount}>{rupiah(wallet.balance)}</Text>
+              <Text style={[styles.amount, { color: colors.ink }]}>{rupiah(wallet.balance)}</Text>
               
               <View style={styles.actionRow}>
-                <TouchableOpacity onPress={() => startEditWallet(wallet)} style={styles.actionBtn}>
-                  <Ionicons name="pencil-outline" size={18} color={colors.ink} />
+                <TouchableOpacity onPress={() => startEditWallet(wallet)} style={[styles.actionBtn, { backgroundColor: theme === "light" ? "#f1f5f9" : "#2c2c2e" }]}>
+                  <Ionicons name="pencil-outline" size={16} color={colors.ink} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDeleteWallet(wallet.id, wallet.name)} style={styles.deleteBtn}>
-                  <Ionicons name="trash-outline" size={18} color={colors.red} />
+                <TouchableOpacity onPress={() => handleDeleteWallet(wallet.id, wallet.name)} style={[styles.deleteBtn, { backgroundColor: theme === "light" ? "#fef2f2" : "#3b1e1e" }]}>
+                  <Ionicons name="trash-outline" size={16} color={colors.red} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -228,20 +229,20 @@ export default function WalletsScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { color: colors.ink, fontSize: 28, fontWeight: "900" },
-  subtitle: { color: colors.muted, marginTop: 6 },
+  header: { marginBottom: 4 },
+  title: { fontSize: 32, fontWeight: "800", letterSpacing: -0.8 },
+  subtitle: { fontSize: 16, marginTop: 4, letterSpacing: -0.24 },
   form: { gap: 12 },
-  formHeader: { color: colors.ink, fontWeight: "900", fontSize: 16, marginBottom: 4 },
+  formHeader: { fontWeight: "800", fontSize: 16, marginBottom: 4, letterSpacing: -0.15 },
   row: { flexDirection: "row", alignItems: "center", gap: 12 },
   dot: { width: 12, height: 12, borderRadius: 6 },
-  name: { color: colors.ink, fontWeight: "900" },
-  meta: { color: colors.muted, marginTop: 3, textTransform: "capitalize" },
-  amount: { color: colors.ink, fontWeight: "900" },
+  name: { fontWeight: "700", fontSize: 16, letterSpacing: -0.2 },
+  meta: { marginTop: 3, textTransform: "capitalize", fontSize: 12, fontWeight: "500" },
+  amount: { fontWeight: "800", fontSize: 16, letterSpacing: -0.2 },
   actionRow: { flexDirection: "row", alignItems: "center", gap: 6, marginLeft: 8 },
-  actionBtn: { padding: 6, borderRadius: 6, backgroundColor: "#f1f5f9" },
-  deleteBtn: { padding: 6, borderRadius: 6, backgroundColor: "#fef2f2" },
-  errorText: { color: colors.red, fontSize: 12, fontWeight: "700", marginTop: -6 },
+  actionBtn: { padding: 6, borderRadius: 6 },
+  deleteBtn: { padding: 6, borderRadius: 6 },
   buttonRow: { flexDirection: "row", gap: 10, marginTop: 6 },
   emptyCenter: { alignItems: "center", justifyContent: "center", paddingVertical: 40, gap: 10 },
-  emptyText: { color: colors.muted, fontWeight: "600", fontSize: 14, textAlign: "center", paddingHorizontal: 20 },
+  emptyText: { fontWeight: "600", fontSize: 14, textAlign: "center", paddingHorizontal: 20 },
 });

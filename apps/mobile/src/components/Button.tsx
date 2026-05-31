@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { ActivityIndicator, Animated, Pressable, StyleSheet, Text } from "react-native";
-import { colors } from "@/theme/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 
 type Props = {
   label: string;
@@ -11,14 +11,15 @@ type Props = {
 };
 
 export function Button({ label, onPress, tone = "primary", loading = false, disabled = false }: Props) {
+  const { colors, theme } = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
 
   function handlePressIn() {
     Animated.spring(scale, {
-      toValue: 0.97,
+      toValue: 0.96,
       useNativeDriver: true,
-      speed: 50,
-      bounciness: 4,
+      speed: 40,
+      bounciness: 3,
     }).start();
   }
 
@@ -26,37 +27,45 @@ export function Button({ label, onPress, tone = "primary", loading = false, disa
     Animated.spring(scale, {
       toValue: 1,
       useNativeDriver: true,
-      speed: 50,
-      bounciness: 4,
+      speed: 40,
+      bounciness: 3,
     }).start();
   }
 
   const isDisabled = disabled || loading;
 
+  // Premium dynamic style tokens based on active iOS theme
+  const buttonStyle = {
+    backgroundColor: 
+      tone === "primary" 
+        ? colors.blue 
+        : tone === "soft"
+          ? (theme === "light" ? "#e5e5ea" : "#2c2c2e")
+          : colors.red,
+  };
+
+  const labelStyle = {
+    color: 
+      tone === "soft"
+        ? colors.ink
+        : "#ffffff",
+  };
+
   return (
-    <Animated.View style={{ transform: [{ scale }], opacity: isDisabled ? 0.55 : 1 }}>
+    <Animated.View style={{ transform: [{ scale }], opacity: isDisabled ? 0.6 : 1 }}>
       <Pressable
         onPress={isDisabled ? undefined : onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        style={[
-          styles.button,
-          tone === "soft" && styles.soft,
-          tone === "danger" && styles.danger,
-        ]}
+        style={[styles.button, buttonStyle]}
       >
         {loading ? (
           <ActivityIndicator
             size="small"
-            color={tone === "soft" ? colors.blue : "#fff"}
+            color={tone === "soft" ? colors.ink : "#ffffff"}
           />
         ) : (
-          <Text
-            style={[
-              styles.label,
-              tone === "soft" && styles.softLabel,
-            ]}
-          >
+          <Text style={[styles.label, labelStyle]}>
             {label}
           </Text>
         )}
@@ -70,21 +79,12 @@ const styles = StyleSheet.create({
     height: 48,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 8,
-    backgroundColor: colors.ink,
-  },
-  soft: {
-    backgroundColor: "#e0f2fe",
-  },
-  danger: {
-    backgroundColor: colors.red,
+    borderRadius: 12,
+    paddingHorizontal: 16,
   },
   label: {
-    color: "#fff",
     fontSize: 15,
     fontWeight: "700",
-  },
-  softLabel: {
-    color: colors.blue,
+    letterSpacing: -0.24,
   },
 });

@@ -6,9 +6,10 @@ import { Segmented } from "@/components/Segmented";
 import { api } from "@/lib/api";
 import { rupiah } from "@/lib/format";
 import { Summary } from "@/lib/types";
-import { colors } from "@/theme/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function ReportsScreen() {
+  const { colors, theme } = useTheme();
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("monthly");
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,9 +34,9 @@ export default function ReportsScreen() {
 
   return (
     <Screen>
-      <View>
-        <Text style={styles.title}>Reports</Text>
-        <Text style={styles.subtitle}>Lihat uang keluar ke mana saja.</Text>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.ink }]}>Reports</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>Lihat uang keluar ke mana saja.</Text>
       </View>
 
       <Segmented value={period} options={["daily", "weekly", "monthly"]} onChange={setPeriod} />
@@ -47,30 +48,30 @@ export default function ReportsScreen() {
           <Card>
             <View style={styles.summaryRow}>
               <View>
-                <Text style={styles.label}>Income</Text>
-                <Text style={styles.good}>{rupiah(summary?.totals.income ?? 0)}</Text>
+                <Text style={[styles.label, { color: colors.muted }]}>Income</Text>
+                <Text style={[styles.good, { color: colors.green }]}>{rupiah(summary?.totals.income ?? 0)}</Text>
               </View>
               <View>
-                <Text style={styles.label}>Expense</Text>
-                <Text style={styles.bad}>{rupiah(summary?.totals.expense ?? 0)}</Text>
+                <Text style={[styles.label, { color: colors.muted }]}>Expense</Text>
+                <Text style={[styles.bad, { color: colors.red }]}>{rupiah(summary?.totals.expense ?? 0)}</Text>
               </View>
             </View>
-            <View style={styles.netBox}>
-              <Text style={styles.label}>Net cashflow</Text>
-              <Text style={styles.net}>{rupiah(summary?.totals.net ?? 0)}</Text>
+            <View style={[styles.netBox, { borderTopColor: colors.line }]}>
+              <Text style={[styles.label, { color: colors.muted }]}>Net cashflow</Text>
+              <Text style={[styles.net, { color: colors.ink }]}>{rupiah(summary?.totals.net ?? 0)}</Text>
             </View>
           </Card>
 
-          <Text style={styles.section}>By Category</Text>
+          <Text style={[styles.section, { color: colors.ink }]}>By Category</Text>
           {summary?.byCategory.map((item, index) => {
             const total = Number(item.total);
             return (
               <Card key={`${item.categoryName}-${index}`}>
                 <View style={styles.row}>
-                  <Text style={styles.name}>{item.categoryName ?? "Uncategorized"}</Text>
-                  <Text style={styles.amount}>{rupiah(total)}</Text>
+                  <Text style={[styles.name, { color: colors.ink }]}>{item.categoryName ?? "Uncategorized"}</Text>
+                  <Text style={[styles.amount, { color: colors.ink }]}>{rupiah(total)}</Text>
                 </View>
-                <View style={styles.track}>
+                <View style={[styles.track, { backgroundColor: theme === "light" ? "#e2e8f0" : "#2c2c2e" }]}>
                   <View
                     style={[
                       styles.fill,
@@ -85,12 +86,12 @@ export default function ReportsScreen() {
             );
           })}
 
-          <Text style={styles.section}>By Wallet</Text>
+          <Text style={[styles.section, { color: colors.ink }]}>By Wallet</Text>
           {summary?.byWallet.map((item, index) => (
             <Card key={`${item.walletName}-${index}`}>
               <View style={styles.row}>
-                <Text style={styles.name}>{item.walletName ?? "Unknown"}</Text>
-                <Text style={styles.amount}>{rupiah(item.total)}</Text>
+                <Text style={[styles.name, { color: colors.ink }]}>{item.walletName ?? "Unknown"}</Text>
+                <Text style={[styles.amount, { color: colors.ink }]}>{rupiah(item.total)}</Text>
               </View>
             </Card>
           ))}
@@ -101,18 +102,19 @@ export default function ReportsScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { color: colors.ink, fontSize: 28, fontWeight: "900" },
-  subtitle: { color: colors.muted, marginTop: 6 },
+  header: { marginBottom: 4 },
+  title: { fontSize: 32, fontWeight: "800", letterSpacing: -0.8 },
+  subtitle: { fontSize: 16, marginTop: 4, letterSpacing: -0.24 },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", gap: 16 },
-  label: { color: colors.muted, fontWeight: "800", marginBottom: 6 },
-  good: { color: colors.green, fontSize: 18, fontWeight: "900" },
-  bad: { color: colors.red, fontSize: 18, fontWeight: "900" },
-  netBox: { marginTop: 18, paddingTop: 18, borderTopWidth: 1, borderTopColor: colors.line },
-  net: { color: colors.ink, fontSize: 26, fontWeight: "900" },
-  section: { color: colors.ink, fontWeight: "900", fontSize: 16 },
+  label: { fontWeight: "700", marginBottom: 6, fontSize: 13, letterSpacing: -0.1 },
+  good: { fontSize: 18, fontWeight: "900", letterSpacing: -0.2 },
+  bad: { fontSize: 18, fontWeight: "900", letterSpacing: -0.2 },
+  netBox: { marginTop: 18, paddingTop: 18, borderTopWidth: 1 },
+  net: { fontSize: 26, fontWeight: "900", letterSpacing: -0.6 },
+  section: { fontWeight: "800", fontSize: 17, marginTop: 16, marginBottom: 4, letterSpacing: -0.2 },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 12 },
-  name: { color: colors.ink, fontWeight: "900" },
-  amount: { color: colors.ink, fontWeight: "900" },
-  track: { height: 10, borderRadius: 5, backgroundColor: "#e2e8f0", overflow: "hidden", marginTop: 12 },
+  name: { fontWeight: "700", fontSize: 15, letterSpacing: -0.2 },
+  amount: { fontWeight: "800", fontSize: 15, letterSpacing: -0.2 },
+  track: { height: 10, borderRadius: 5, overflow: "hidden", marginTop: 12 },
   fill: { height: "100%" },
 });
