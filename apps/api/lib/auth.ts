@@ -33,6 +33,19 @@ export async function requireUser(request: Request): Promise<AuthedUser> {
 
   const user = { id: data.user.id, email: data.user.email };
 
+  // Check if profile already exists.
+  const [existingProfile] = await db
+    .select({ id: profiles.id })
+    .from(profiles)
+    .where(eq(profiles.id, user.id))
+    .limit(1);
+
+  // If profile exists, it means the user has already been seeded!
+  if (existingProfile) {
+    return user;
+  }
+
+  // Otherwise, perform the profile insert and seed defaults.
   await db
     .insert(profiles)
     .values({ id: user.id, email: user.email, name: data.user.user_metadata?.name })

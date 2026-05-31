@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View, ScrollView } from "react-native";
 import { useNavigation, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Card } from "@/components/Card";
 import { Screen } from "@/components/Screen";
 import { Segmented } from "@/components/Segmented";
@@ -279,7 +280,8 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
+    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+      <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
       <View style={styles.header}>
         <Text style={styles.eyebrow}>PocketFlow</Text>
         <Text style={styles.title}>Uang kamu ada di mana, kelihatan jelas.</Text>
@@ -561,11 +563,13 @@ export default function HomeScreen() {
           );
         })
       )}
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.bg },
   scrollContainer: { flex: 1, backgroundColor: colors.bg },
   scrollContent: { padding: 16, paddingBottom: 40, gap: 16 },
   header: { marginBottom: 4 },

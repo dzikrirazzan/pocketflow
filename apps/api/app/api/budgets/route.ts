@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { budgets } from "@/db/schema";
 import { authErrorResponse, requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -9,7 +9,11 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
     const user = await requireUser(request);
-    const rows = await db.select().from(budgets).where(eq(budgets.userId, user.id)).orderBy(desc(budgets.createdAt));
+    const rows = await db
+      .select()
+      .from(budgets)
+      .where(and(eq(budgets.userId, user.id), eq(budgets.isActive, true)))
+      .orderBy(desc(budgets.createdAt));
     return Response.json({ budgets: rows });
   } catch (error) {
     return authErrorResponse(error);
