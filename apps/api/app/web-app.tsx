@@ -79,7 +79,23 @@ const emptySummary: Summary = {
   budgetUsage: [],
 };
 
-const walletColors = ["#007aff", "#30b0c7", "#34c759", "#ff9500", "#af52de", "#ff3b30"];
+const walletColors = [
+  "var(--color-accent)",
+  "var(--color-info)",
+  "var(--color-success)",
+  "var(--color-warning)",
+  "var(--color-violet)",
+  "var(--color-error)",
+];
+
+const navigationItems: Array<[ViewKey, string]> = [
+  ["overview", "Overview"],
+  ["transactions", "Transactions"],
+  ["wallets", "Wallets"],
+  ["budgets", "Budgets"],
+  ["reports", "Reports"],
+  ["profile", "Profile"],
+];
 
 function localDateTimeValue(date = new Date()) {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
@@ -289,6 +305,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
   const totalBalance = wallets.reduce((sum, wallet) => sum + Number(wallet.balance), 0);
   const maxCategory = Math.max(1, ...summary.byCategory.map((item) => Number(item.total)));
   const budgetUsageById = useMemo(() => new Map(summary.budgetUsage.map((item) => [item.budgetId, item])), [summary]);
+  const currentViewTitle = viewTitle(activeView);
 
   async function handleAuthSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -502,17 +519,20 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
 
   if (!config.isConfigured) {
     return (
-      <main className="auth-shell">
-        <section className="auth-card">
-          <div className="brand-lockup">
-            <span className="brand-mark">PF</span>
-            <div>
-              <h1>PocketFlow Web</h1>
-              <p>Backend belum punya Supabase env untuk web login.</p>
+      <main className="site-shell">
+        <ProductNav mode="marketing" />
+        <section className="auth-state-section">
+          <div className="auth-card system-card">
+            <div className="brand-lockup">
+              <span className="brand-mark">PF</span>
+              <div>
+                <h1>PocketFlow Web</h1>
+                <p>Supabase environment untuk web belum lengkap.</p>
+              </div>
             </div>
-          </div>
-          <div className="notice error">
-            Tambahkan `SUPABASE_URL` dan `SUPABASE_ANON_KEY` di environment `apps/api`. Setelah itu akun yang sama bisa dipakai dari mobile dan website.
+            <div className="notice error">
+              Tambahkan `SUPABASE_URL` dan `SUPABASE_ANON_KEY` di environment `apps/api`. Setelah itu akun yang sama bisa dipakai dari mobile dan website.
+            </div>
           </div>
         </section>
       </main>
@@ -521,10 +541,17 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
 
   if (authLoading) {
     return (
-      <main className="auth-shell">
-        <section className="auth-card compact-card">
-          <div className="spinner" />
-          <p className="muted">Memuat session PocketFlow...</p>
+      <main className="site-shell">
+        <ProductNav mode="marketing" />
+        <section className="auth-state-section">
+          <div className="auth-card compact-card system-card">
+            <div className="skeleton-stack" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
+            <p className="muted">Memuat session PocketFlow...</p>
+          </div>
         </section>
       </main>
     );
@@ -532,86 +559,160 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
 
   if (!session) {
     return (
-      <main className="auth-shell">
-        <section className="auth-card">
-          <div className="brand-lockup">
-            <span className="brand-mark">PF</span>
-            <div>
-              <h1>PocketFlow</h1>
-              <p>Login sekali, data mobile dan web tetap sinkron.</p>
+      <main className="site-shell">
+        <ProductNav mode="marketing" />
+        <section className="landing-hero" id="top">
+          <div className="hero-copy animate-in">
+            <h1>
+              Command your <span>daily cashflow</span>.
+            </h1>
+            <p>Track wallets, budgets, and spend from web or iPhone with one synced Supabase account.</p>
+            <div className="hero-actions">
+              <a className="primary-button" href="#auth-panel">
+                Start tracking
+              </a>
+              <a className="ghost-button" href="#features">
+                See system
+              </a>
             </div>
           </div>
 
-          <form className="auth-form" onSubmit={handleAuthSubmit}>
-            <label>
-              Email
-              <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" placeholder="email@contoh.com" required />
-            </label>
-            <label>
-              Password
-              <input
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                type="password"
-                autoComplete={authMode === "signin" ? "current-password" : "new-password"}
-                placeholder="Minimal 6 karakter"
-                minLength={6}
-                required
-              />
-            </label>
-            {authMessage ? <div className={authMessage.includes("dibuat") ? "notice" : "notice error"}>{authMessage}</div> : null}
-            <button className="primary-button wide" disabled={actionBusy === "auth"} type="submit">
-              {actionBusy === "auth" ? "Memproses..." : authMode === "signin" ? "Sign In" : "Create Account"}
-            </button>
-          </form>
+          <section className="auth-card hero-auth system-card animate-in" id="auth-panel" aria-label="PocketFlow authentication">
+            <div className="brand-lockup">
+              <span className="brand-mark">PF</span>
+              <div>
+                <h2>PocketFlow</h2>
+                <p>Login sekali, data mobile dan web tetap sinkron.</p>
+              </div>
+            </div>
 
-          <button className="ghost-button wide" type="button" onClick={() => setAuthMode(authMode === "signin" ? "signup" : "signin")}>
-            {authMode === "signin" ? "Buat akun baru" : "Sudah punya akun"}
-          </button>
+            <form className="auth-form" onSubmit={handleAuthSubmit}>
+              <label>
+                Email
+                <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" placeholder="email@contoh.com" required />
+              </label>
+              <label>
+                Password
+                <input
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  type="password"
+                  autoComplete={authMode === "signin" ? "current-password" : "new-password"}
+                  placeholder="Minimal 6 karakter"
+                  minLength={6}
+                  required
+                />
+              </label>
+              {authMessage ? <div className={authMessage.includes("dibuat") ? "notice" : "notice error"}>{authMessage}</div> : null}
+              <button className="primary-button wide" disabled={actionBusy === "auth"} type="submit">
+                {actionBusy === "auth" ? "Memproses..." : authMode === "signin" ? "Sign In" : "Create Account"}
+              </button>
+            </form>
+
+            <button className="ghost-button wide" type="button" onClick={() => setAuthMode(authMode === "signin" ? "signup" : "signin")}>
+              {authMode === "signin" ? "Buat akun baru" : "Sudah punya akun"}
+            </button>
+          </section>
         </section>
+
+        <section className="logo-strip" aria-label="PocketFlow platform support">
+          {["Supabase", "Vercel", "Expo", "React Native", "Next.js"].map((item) => (
+            <span key={item}>{item}</span>
+          ))}
+        </section>
+
+        <section className="feature-section" id="features">
+          <div className="section-heading">
+            <h2>Built for daily money decisions.</h2>
+            <p>Every surface is designed for fast entry, clear accountability, and quiet financial review.</p>
+          </div>
+          <div className="feature-grid">
+            <article className="feature-card">
+              <span className="feature-index">01</span>
+              <h3>Multi-wallet tracking</h3>
+              <p>Cash, bank, and e-wallet balances stay separated so every transaction lands in the right place.</p>
+            </article>
+            <article className="feature-card accent-card">
+              <span className="feature-index">02</span>
+              <h3>Budget pressure</h3>
+              <p>Daily, weekly, and monthly limits make overspending visible before the month feels gone.</p>
+            </article>
+            <article className="feature-card visual-card">
+              <span className="feature-index">03</span>
+              <h3>One account sync</h3>
+              <p>Mobile and web share the same Supabase identity, so the dashboard follows your real usage.</p>
+            </article>
+          </div>
+        </section>
+
+        <section className="detail-section">
+          <div>
+            <h2>Designed around the transaction moment.</h2>
+            <p>Open, choose wallet, attach category or budget, save. Reports update without switching tools or reconciling spreadsheets.</p>
+          </div>
+          <div className="detail-visual" aria-hidden="true">
+            <div className="visual-row">
+              <span>Expense</span>
+              <strong>{rupiah(128000)}</strong>
+            </div>
+            <div className="visual-row">
+              <span>Wallet</span>
+              <strong>GoPay</strong>
+            </div>
+            <div className="visual-row">
+              <span>Budget</span>
+              <strong>Food monthly</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="stats-section">
+          <div>
+            <strong>6</strong>
+            <span>Core screens</span>
+          </div>
+          <div>
+            <strong>4</strong>
+            <span>Report periods</span>
+          </div>
+          <div>
+            <strong>1</strong>
+            <span>Synced account</span>
+          </div>
+        </section>
+
+        <section className="cta-banner">
+          <h2>Start from your next transaction.</h2>
+          <a className="primary-button" href="#auth-panel">
+            Open PocketFlow
+          </a>
+        </section>
+
+        <ProductFooter />
       </main>
     );
   }
 
   return (
     <main className="app-shell">
-      <aside className="sidebar">
-        <div className="brand-lockup sidebar-brand">
-          <span className="brand-mark">PF</span>
-          <div>
-            <strong>PocketFlow</strong>
-            <span>Web Dashboard</span>
-          </div>
-        </div>
-
-        <nav className="nav-list" aria-label="PocketFlow navigation">
-          {[
-            ["overview", "Overview"],
-            ["transactions", "Transactions"],
-            ["wallets", "Wallets"],
-            ["budgets", "Budgets"],
-            ["reports", "Reports"],
-            ["profile", "Profile"],
-          ].map(([key, label]) => (
-            <button key={key} className={activeView === key ? "nav-item active" : "nav-item"} type="button" onClick={() => setActiveView(key as ViewKey)}>
-              {label}
-            </button>
-          ))}
-        </nav>
-
-        <div className="sidebar-footer">
-          <span className="muted one-line">{session.user.email}</span>
-          <button className="ghost-button" type="button" onClick={handleSignOut}>
-            Sign Out
-          </button>
-        </div>
-      </aside>
+      <ProductNav
+        activeView={activeView}
+        email={session.user.email ?? ""}
+        mode="app"
+        onNavigate={setActiveView}
+        onSignOut={handleSignOut}
+      />
 
       <section className="workspace">
-        <header className="topbar">
+        <header className="dashboard-hero">
           <div>
-            <p className="eyebrow">Personal Finance</p>
-            <h1>{viewTitle(activeView)}</h1>
+            <span className="section-kicker">Personal finance command center</span>
+            <h1>{activeView === "overview" ? "Command your daily cashflow" : currentViewTitle}</h1>
+            <p>
+              {activeView === "overview"
+                ? "Review balances, budgets, wallet pressure, and recent movement in one focused surface."
+                : "Keep this workspace synced with the same Supabase account you use on mobile."}
+            </p>
           </div>
           <div className="topbar-actions">
             <div className="period-control" aria-label="Report period">
@@ -666,7 +767,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                                 <strong>{rupiah(total)}</strong>
                               </div>
                               <div className="progress-track">
-                                <span style={{ width: `${Math.max(4, (total / maxCategory) * 100)}%`, backgroundColor: item.color ?? "#007aff" }} />
+                                <span style={{ width: `${Math.max(4, (total / maxCategory) * 100)}%`, backgroundColor: item.color ?? "var(--color-accent)" }} />
                               </div>
                             </div>
                           );
@@ -936,7 +1037,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                             <strong>{rupiah(item.total)}</strong>
                           </div>
                           <div className="progress-track">
-                            <span style={{ width: `${Math.max(4, (Number(item.total) / maxCategory) * 100)}%`, backgroundColor: item.color ?? "#007aff" }} />
+                            <span style={{ width: `${Math.max(4, (Number(item.total) / maxCategory) * 100)}%`, backgroundColor: item.color ?? "var(--color-accent)" }} />
                           </div>
                         </div>
                       ))}
@@ -951,7 +1052,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                     <div className="wallet-list">
                       {summary.byWallet.map((item, index) => (
                         <div className="wallet-row" key={`${item.walletName}-${index}`}>
-                          <span className="wallet-dot" style={{ backgroundColor: item.color ?? "#8e8e93" }} />
+                          <span className="wallet-dot" style={{ backgroundColor: item.color ?? "var(--color-text-muted)" }} />
                           <div>
                             <strong>{item.walletName ?? "Unknown"}</strong>
                             <span>Expense</span>
@@ -985,6 +1086,94 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
         )}
       </section>
     </main>
+  );
+}
+
+function ProductNav({
+  activeView,
+  email,
+  mode,
+  onNavigate,
+  onSignOut,
+}: {
+  activeView?: ViewKey;
+  email?: string;
+  mode: "marketing" | "app";
+  onNavigate?: (view: ViewKey) => void;
+  onSignOut?: () => void;
+}) {
+  return (
+    <header className={`product-nav ${mode === "app" ? "app-nav" : "marketing-nav"}`}>
+      {mode === "marketing" ? (
+        <a className="nav-brand" href="#top">
+          <span className="brand-mark">PF</span>
+          <span>PocketFlow</span>
+        </a>
+      ) : (
+        <div className="nav-brand" aria-label="PocketFlow">
+          <span className="brand-mark">PF</span>
+          <span>PocketFlow</span>
+        </div>
+      )}
+
+      {mode === "marketing" ? (
+        <nav className="nav-links" aria-label="PocketFlow website navigation">
+          <a href="#features">Features</a>
+          <a href="#auth-panel">Login</a>
+          <a href="#footer">Docs</a>
+        </nav>
+      ) : (
+        <nav className="nav-links app-tabs" aria-label="PocketFlow app navigation">
+          {navigationItems.map(([key, label]) => (
+            <button key={key} className={activeView === key ? "nav-tab active" : "nav-tab"} type="button" onClick={() => onNavigate?.(key)}>
+              {label}
+            </button>
+          ))}
+        </nav>
+      )}
+
+      <div className="nav-actions">
+        {mode === "app" ? <span className="nav-email">{email}</span> : null}
+        {mode === "app" ? (
+          <button className="ghost-button" type="button" onClick={onSignOut}>
+            Sign Out
+          </button>
+        ) : (
+          <a className="primary-button nav-cta" href="#auth-panel">
+            Open app
+          </a>
+        )}
+      </div>
+    </header>
+  );
+}
+
+function ProductFooter() {
+  return (
+    <footer className="product-footer" id="footer">
+      <div>
+        <a className="nav-brand" href="#top">
+          <span className="brand-mark">PF</span>
+          <span>PocketFlow</span>
+        </a>
+        <p>Finance tracking for the moments you actually spend money.</p>
+      </div>
+      <div>
+        <strong>Product</strong>
+        <a href="#features">Features</a>
+        <a href="#auth-panel">Login</a>
+      </div>
+      <div>
+        <strong>Stack</strong>
+        <span>Next.js</span>
+        <span>Supabase</span>
+      </div>
+      <div>
+        <strong>Mobile</strong>
+        <span>Expo Go</span>
+        <span>React Native</span>
+      </div>
+    </footer>
   );
 }
 
