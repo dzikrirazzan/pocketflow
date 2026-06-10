@@ -1,16 +1,28 @@
 import { PropsWithChildren } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleProp, StyleSheet, useWindowDimensions, ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/contexts/ThemeContext";
 
-export function Screen({ children }: PropsWithChildren) {
+type Props = PropsWithChildren<{
+  contentStyle?: StyleProp<ViewStyle>;
+}>;
+
+export function Screen({ children, contentStyle }: Props) {
   const { colors } = useTheme();
+  const { width } = useWindowDimensions();
+  const horizontalPadding = width < 375 ? 16 : width > 430 ? 24 : 20;
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} edges={["top", "left", "right"]}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingHorizontal: horizontalPadding }, contentStyle]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        contentInsetAdjustmentBehavior="automatic"
+        automaticallyAdjustKeyboardInsets
+      >
         {children}
-        <View style={{ height: 24 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -21,7 +33,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
-    gap: 16
+    width: "100%",
+    maxWidth: 720,
+    alignSelf: "center",
+    flexGrow: 1,
+    paddingTop: 18,
+    paddingBottom: 132,
+    gap: 16,
   }
 });

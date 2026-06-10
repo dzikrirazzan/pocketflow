@@ -2,9 +2,14 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "@/db/schema";
 
-const connectionString = process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/postgres";
+const connectionString = process.env.DATABASE_URL;
+const isNextProductionBuild = process.env.NEXT_PHASE === "phase-production-build";
 
-const client = postgres(connectionString, {
+if (!connectionString && process.env.NODE_ENV === "production" && !isNextProductionBuild) {
+  throw new Error("DATABASE_URL is required in production");
+}
+
+const client = postgres(connectionString ?? "postgresql://postgres:postgres@localhost:5432/postgres", {
   max: 1,
   prepare: false
 });

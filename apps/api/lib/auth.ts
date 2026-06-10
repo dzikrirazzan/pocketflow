@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { eq } from "drizzle-orm";
+import { ZodError } from "zod";
 import { categories, profiles, wallets } from "@/db/schema";
 import { db } from "@/lib/db";
 
@@ -79,6 +80,16 @@ export async function requireUser(request: Request): Promise<AuthedUser> {
 }
 
 export function authErrorResponse(error: unknown) {
+  if (error instanceof ZodError) {
+    return Response.json(
+      {
+        error: "Invalid request",
+        issues: error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message }))
+      },
+      { status: 400 }
+    );
+  }
+
   const status = typeof error === "object" && error && "status" in error ? Number(error.status) : 500;
   return Response.json({ error: error instanceof Error ? error.message : "Unexpected error" }, { status });
 }

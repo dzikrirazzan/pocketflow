@@ -8,8 +8,12 @@
   ],
   "scripts": {
     "dev:api": "npm --workspace apps/api run dev",
+    "dev:web": "npm --workspace apps/api run dev",
     "dev:mobile": "npm --workspace apps/mobile run start",
     "build:api": "npm --workspace apps/api run build",
+    "deploy:vercel": "npx vercel deploy --prod -y",
+    "check:mobile": "cd apps/mobile && npx expo install --check",
+    "verify": "npm run typecheck && npm run build:api && npm run check:mobile",
     "typecheck": "npm --workspaces run typecheck"
   },
   "devDependencies": {

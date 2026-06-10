@@ -1,14 +1,14 @@
 # PocketFlow
 
-PocketFlow is a multi-wallet finance tracker built with Expo React Native, Next.js API routes, Supabase PostgreSQL/Auth, and Drizzle ORM.
+PocketFlow is a multi-wallet finance tracker built with Expo React Native, Next.js web/API routes, Supabase PostgreSQL/Auth, and Drizzle ORM.
 
-Live API: https://pocketflow-seven.vercel.app
+Live Web + API: https://pocketflow-seven.vercel.app
 GitHub: https://github.com/dzikrirazzan/pocketflow
 
 ## Apps
 
 - `apps/mobile`: Expo app for iOS via Expo Go.
-- `apps/api`: Next.js API backend deployable to Vercel.
+- `apps/api`: Next.js web frontend and API backend deployed together to Vercel.
 
 ## Core Features
 
@@ -38,13 +38,22 @@ Required Supabase settings:
 - Copy the project URL and anon key into both app env files.
 - Copy the PostgreSQL connection string into `apps/api/.env.local` and Vercel environment variables.
 
-## Deploy Backend Free
+## Production Setup
 
-1. Push this repository to GitHub.
-2. Create a free Supabase project and run `apps/api/db/schema.sql`.
-3. Import the GitHub repository into Vercel.
-4. Set the Vercel project root to `apps/api` or keep the root repo config and use the included `vercel.json`.
-5. Add these Vercel environment variables:
+PocketFlow production uses:
+
+- Vercel for the web frontend and backend API.
+- Supabase for Auth and Postgres database.
+- Expo Go for the iOS mobile client.
+
+The same Supabase user can sign in on web and mobile. Both clients call the same Vercel API using the Supabase bearer token, so data stays synced by `user.id`.
+
+## Deploy Web + Backend To Vercel
+
+The repo includes `vercel.json`, so deploy from the repository root.
+
+1. Create a free Supabase project and run `apps/api/db/schema.sql`.
+2. Add these Vercel production environment variables:
 
 ```bash
 DATABASE_URL=postgresql://...
@@ -52,11 +61,35 @@ SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 ```
 
-6. After Vercel deploys, set `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` to the Vercel URL.
+3. Deploy production:
+
+```bash
+npm run deploy:vercel
+```
+
+The Vercel URL serves both:
+
+- Web app: `https://your-vercel-domain`
+- API routes: `https://your-vercel-domain/api/...`
 
 ## Expo Go
 
-Run `npm run dev:mobile`, scan the QR code with Expo Go on iPhone, and keep the API URL reachable from the phone. For local device testing, use your Mac LAN IP instead of `localhost`.
+Create `apps/mobile/.env` from `apps/mobile/.env.example`, then set:
+
+```bash
+EXPO_PUBLIC_API_URL=https://your-vercel-domain
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+EXPO_PUBLIC_DEMO_MODE=false
+```
+
+Run:
+
+```bash
+npm run dev:mobile
+```
+
+Scan the QR code with Expo Go on iPhone. Keep the terminal running while using Expo Go.
 
 ## Local Development
 
@@ -66,6 +99,12 @@ npm run dev:api
 npm run dev:mobile
 ```
 
-Set `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` to your local API URL, usually `http://localhost:3000`.
+For local API testing, set `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` to your local API URL. On a physical iPhone, do not use `localhost`; use your Mac LAN IP, for example `http://192.168.1.158:3000`.
 
-The mobile app starts in demo mode by default, so it can be opened in Expo Go before Supabase is configured. Set `EXPO_PUBLIC_DEMO_MODE="false"` when you want real auth and database sync.
+## Final Checks
+
+```bash
+npm run verify
+```
+
+This checks TypeScript, builds the Vercel web/API app, and verifies Expo SDK package compatibility.

@@ -18,9 +18,9 @@ Open Supabase SQL Editor and run:
 -- paste everything from apps/api/db/schema.sql
 ```
 
-## 3. Configure Vercel
+## 3. Configure Vercel Web + API
 
-Add these environment variables in the Vercel project:
+The Next.js app in `apps/api` serves both the web frontend and backend API. Add these environment variables in the Vercel project:
 
 ```bash
 DATABASE_URL=postgresql://...
@@ -29,6 +29,11 @@ SUPABASE_ANON_KEY=your-anon-key
 ```
 
 Redeploy the backend after saving env values.
+Redeploy from the repository root:
+
+```bash
+npm run deploy:vercel
+```
 
 ## 4. Configure Expo
 
@@ -41,4 +46,4 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 EXPO_PUBLIC_DEMO_MODE=false
 ```
 
-For local iPhone testing, replace local API URLs with your Mac LAN IP. Do not use `localhost` from the phone.
+For production Expo Go testing, keep `EXPO_PUBLIC_API_URL` pointed to Vercel. For local iPhone testing, replace local API URLs with your Mac LAN IP. Do not use `localhost` from the phone.

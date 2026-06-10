@@ -27,9 +27,11 @@ export function Card({ children }: PropsWithChildren) {
 
 const styles = StyleSheet.create({
   card: {
+    width: "100%",
     borderRadius: 14,
     borderWidth: 1,
     padding: 16,
-    gap: 12
+    gap: 12,
+    overflow: "hidden",
   }
 });

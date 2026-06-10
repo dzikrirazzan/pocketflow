@@ -25,6 +25,7 @@ export function Field({ label, error, style, ...props }: Props) {
       <TextInput 
         placeholderTextColor={theme === "light" ? "#c7c7cc" : "#48484a"} 
         style={[styles.input, inputStyle, style]} 
+        selectionColor={colors.blue}
         {...props} 
       />
       {error ? <Text style={[styles.error, { color: colors.red }]}>{error}</Text> : null}
@@ -39,13 +40,14 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: "600",
-    letterSpacing: -0.08,
+    letterSpacing: 0,
   },
   input: {
-    height: 48,
+    minHeight: 48,
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 14,
+    paddingVertical: 12,
     fontSize: 15,
   },
   error: {

@@ -6,6 +6,7 @@ import { Card } from "@/components/Card";
 import { Field } from "@/components/Field";
 import { Screen } from "@/components/Screen";
 import { Segmented } from "@/components/Segmented";
+import { ErrorState, LoadingState, TopProgressBar } from "@/components/StateViews";
 import { api } from "@/lib/api";
 import { rupiah, parseRupiahInput } from "@/lib/format";
 import { Budget, Summary } from "@/lib/types";
@@ -20,27 +21,35 @@ export default function BudgetsScreen() {
   const [rawAmount, setRawAmount] = useState(0);
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("monthly");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [adding, setAdding] = useState(false);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
+  const [deletingBudgetId, setDeletingBudgetId] = useState<string | null>(null);
 
   // Validation states
   const [nameError, setNameError] = useState("");
   const [amountError, setAmountError] = useState("");
 
-  async function load() {
+  async function load(showInitial = false) {
+    if (showInitial) setLoading(true);
+    else setRefreshing(true);
+    setLoadError("");
+
     try {
       const [budgetData, summaryData] = await Promise.all([api.budgets(), api.summary(period)]);
       setBudgets(budgetData.budgets);
       setSummary(summaryData);
     } catch (err: any) {
-      Alert.alert("Error", err?.message ?? "Gagal memuat data budget.");
+      setLoadError(err?.message ?? "Gagal memuat data budget.");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }
 
   useEffect(() => {
-    load();
+    load(summary === null);
   }, [period]);
 
   function handleAmountChange(text: string) {
@@ -76,6 +85,8 @@ export default function BudgetsScreen() {
   }
 
   async function saveBudget() {
+    if (adding) return;
+
     let isValid = true;
     if (!name.trim()) {
       setNameError("Nama budget wajib diisi.");
@@ -111,7 +122,7 @@ export default function BudgetsScreen() {
       setName("");
       setDisplayAmount("");
       setRawAmount(0);
-      load();
+      await load(false);
     } catch (err: any) {
       Alert.alert("Error", err?.message ?? "Gagal menyimpan budget.");
     } finally {
@@ -129,15 +140,17 @@ export default function BudgetsScreen() {
           text: "Hapus",
           style: "destructive",
           onPress: async () => {
-            setLoading(true);
+            if (deletingBudgetId) return;
+
+            setDeletingBudgetId(id);
             try {
               await api.deleteBudget(id);
               Alert.alert("Sukses", "Budget berhasil dihapus.");
-              load();
+              await load(false);
             } catch (err: any) {
               Alert.alert("Error", err?.message ?? "Gagal menghapus budget.");
             } finally {
-              setLoading(false);
+              setDeletingBudgetId(null);
             }
           }
         }
@@ -150,7 +163,11 @@ export default function BudgetsScreen() {
   if (loading) {
     return (
       <Screen>
-        <ActivityIndicator size="large" color={colors.blue} style={{ marginTop: 40 }} />
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.ink }]}>Budgets</Text>
+          <Text style={[styles.subtitle, { color: colors.muted }]}>Bikin batas harian, mingguan, atau bulanan.</Text>
+        </View>
+        <LoadingState title="Memuat budget" subtitle="Menyiapkan limit dan progres pengeluaran terbaru." />
       </Screen>
     );
   }
@@ -161,6 +178,10 @@ export default function BudgetsScreen() {
         <Text style={[styles.title, { color: colors.ink }]}>Budgets</Text>
         <Text style={[styles.subtitle, { color: colors.muted }]}>Bikin batas harian, mingguan, atau bulanan.</Text>
       </View>
+
+      <TopProgressBar visible={refreshing || adding || Boolean(deletingBudgetId)} />
+
+      {loadError ? <ErrorState message={loadError} onRetry={() => load(false)} /> : null}
 
       <Card>
         <View style={styles.form}>
@@ -222,22 +243,38 @@ export default function BudgetsScreen() {
           return (
             <Card key={budget.id}>
               <View style={styles.row}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.name, { color: colors.ink }]}>{budget.name}</Text>
-                  <Text style={[styles.meta, { color: colors.muted }]}>{budget.period}</Text>
+                <View style={styles.budgetTextWrap}>
+                  <Text numberOfLines={1} style={[styles.name, { color: colors.ink }]}>{budget.name}</Text>
+                  <Text numberOfLines={1} style={[styles.meta, { color: colors.muted }]}>{budget.period}</Text>
                 </View>
                 <View style={styles.rightInfo}>
-                  <Text style={[styles.amount, { color: colors.teal }]}>
+                  <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.78} style={[styles.amount, { color: colors.teal }]}>
                     {isOverspent ? "Overspent " : "Remaining "}
                     {rupiah(Math.abs(limit - used))}
                   </Text>
                   
                   <View style={styles.actionRow}>
-                    <TouchableOpacity onPress={() => startEditBudget(budget)} style={[styles.actionBtn, { backgroundColor: theme === "light" ? "#f1f5f9" : "#2c2c2e" }]}>
-                      <Ionicons name="pencil-outline" size={16} color={colors.ink} />
+                    <TouchableOpacity
+                      activeOpacity={0.75}
+                      hitSlop={6}
+                      disabled={Boolean(deletingBudgetId) || adding}
+                      onPress={() => startEditBudget(budget)}
+                      style={[styles.actionBtn, { backgroundColor: theme === "light" ? "#f1f5f9" : "#2c2c2e" }]}
+                    >
+                      <Ionicons name="pencil-outline" size={17} color={colors.ink} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDeleteBudget(budget.id, budget.name)} style={[styles.deleteBtn, { backgroundColor: theme === "light" ? "#fef2f2" : "#3b1e1e" }]}>
-                      <Ionicons name="trash-outline" size={16} color={colors.red} />
+                    <TouchableOpacity
+                      activeOpacity={0.75}
+                      hitSlop={6}
+                      disabled={Boolean(deletingBudgetId) || adding}
+                      onPress={() => handleDeleteBudget(budget.id, budget.name)}
+                      style={[styles.deleteBtn, { backgroundColor: theme === "light" ? "#fef2f2" : "#3b1e1e" }]}
+                    >
+                      {deletingBudgetId === budget.id ? (
+                        <ActivityIndicator size="small" color={colors.red} />
+                      ) : (
+                        <Ionicons name="trash-outline" size={17} color={colors.red} />
+                      )}
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -254,7 +291,7 @@ export default function BudgetsScreen() {
                 />
               </View>
               <View style={styles.footerRow}>
-                <Text style={[styles.meta, { color: colors.muted }]}>
+                <Text numberOfLines={1} style={[styles.meta, styles.footerMeta, { color: colors.muted }]}>
                   Used {rupiah(used)} of {rupiah(limit)}
                 </Text>
                 {isOverspent ? (
@@ -273,24 +310,26 @@ export default function BudgetsScreen() {
 
 const styles = StyleSheet.create({
   header: { marginBottom: 4 },
-  title: { fontSize: 32, fontWeight: "800", letterSpacing: -0.8 },
-  subtitle: { fontSize: 16, marginTop: 4, letterSpacing: -0.24 },
+  title: { fontSize: 32, fontWeight: "800", letterSpacing: 0 },
+  subtitle: { fontSize: 16, marginTop: 4, letterSpacing: 0, lineHeight: 22 },
   form: { gap: 12 },
-  formHeader: { fontWeight: "800", fontSize: 16, marginBottom: 4, letterSpacing: -0.15 },
+  formHeader: { fontWeight: "800", fontSize: 16, marginBottom: 4, letterSpacing: 0 },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
-  name: { fontWeight: "700", fontSize: 16, letterSpacing: -0.2 },
+  budgetTextWrap: { flex: 1, minWidth: 0 },
+  name: { fontWeight: "700", fontSize: 16, letterSpacing: 0 },
   meta: { marginTop: 3, textTransform: "capitalize", fontSize: 12, fontWeight: "500" },
-  amount: { fontWeight: "800", fontSize: 14, letterSpacing: -0.2 },
-  rightInfo: { flexDirection: "row", alignItems: "center", gap: 12 },
-  actionRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  actionBtn: { padding: 6, borderRadius: 6 },
-  deleteBtn: { padding: 6, borderRadius: 6 },
+  amount: { fontWeight: "800", fontSize: 14, letterSpacing: 0, textAlign: "right" },
+  rightInfo: { alignItems: "flex-end", gap: 8, maxWidth: "52%" },
+  actionRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  actionBtn: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  deleteBtn: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   track: { height: 10, borderRadius: 5, overflow: "hidden", marginTop: 14 },
   fill: { height: "100%" },
   buttonRow: { flexDirection: "row", gap: 10, marginTop: 6 },
   emptyCenter: { alignItems: "center", justifyContent: "center", paddingVertical: 40, gap: 10 },
   emptyText: { fontWeight: "600", fontSize: 14, textAlign: "center", paddingHorizontal: 20 },
-  footerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 6 },
-  overspentWarning: { color: "#ff3b30", fontWeight: "800", fontSize: 12, letterSpacing: -0.15 },
-  warningWarning: { color: "#d97706", fontWeight: "800", fontSize: 12, letterSpacing: -0.15 },
+  footerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 10, marginTop: 6 },
+  footerMeta: { flex: 1, minWidth: 0 },
+  overspentWarning: { color: "#ff3b30", fontWeight: "800", fontSize: 12, letterSpacing: 0 },
+  warningWarning: { color: "#d97706", fontWeight: "800", fontSize: 12, letterSpacing: 0 },
 });

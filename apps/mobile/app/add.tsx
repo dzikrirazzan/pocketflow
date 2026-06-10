@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Field } from "@/components/Field";
+import { Screen } from "@/components/Screen";
 import { Segmented } from "@/components/Segmented";
+import { ErrorState, LoadingState, TopProgressBar } from "@/components/StateViews";
 import { api } from "@/lib/api";
 import { parseRupiahInput } from "@/lib/format";
 import { Budget, Category, Wallet } from "@/lib/types";
-import { colors } from "@/theme/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function AddScreen() {
+  const { colors, theme } = useTheme();
   const [type, setType] = useState<"expense" | "income" | "transfer">("expense");
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -22,6 +24,8 @@ export default function AddScreen() {
   const [displayAmount, setDisplayAmount] = useState("");
   const [rawAmount, setRawAmount] = useState(0);
   const [note, setNote] = useState("");
+  const [loadingForm, setLoadingForm] = useState(true);
+  const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
 
   // Inline Validation States
@@ -30,27 +34,32 @@ export default function AddScreen() {
   const [targetWalletError, setTargetWalletError] = useState("");
   const [categoryError, setCategoryError] = useState("");
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [walletData, categoryData, budgetData] = await Promise.all([
-          api.wallets(),
-          api.categories(),
-          api.budgets(),
-        ]);
-        setWallets(walletData.wallets);
-        setCategories(categoryData.categories);
-        setBudgets(budgetData.budgets);
-        
-        setWalletId(walletData.wallets[0]?.id ?? "");
-        setTargetWalletId(walletData.wallets[1]?.id ?? "");
-        const firstExpenseCategory = categoryData.categories.find((c) => c.kind === "expense");
-        setCategoryId(firstExpenseCategory?.id ?? "");
-        setBudgetId("");
-      } catch (err: any) {
-        Alert.alert("Error", err.message || "Failed to load form data");
-      }
+  async function fetchData() {
+    setLoadingForm(true);
+    setFormError("");
+    try {
+      const [walletData, categoryData, budgetData] = await Promise.all([
+        api.wallets(),
+        api.categories(),
+        api.budgets(),
+      ]);
+      setWallets(walletData.wallets);
+      setCategories(categoryData.categories);
+      setBudgets(budgetData.budgets);
+
+      setWalletId(walletData.wallets[0]?.id ?? "");
+      setTargetWalletId(walletData.wallets[1]?.id ?? "");
+      const firstExpenseCategory = categoryData.categories.find((c) => c.kind === "expense");
+      setCategoryId(firstExpenseCategory?.id ?? "");
+      setBudgetId("");
+    } catch (err: any) {
+      setFormError(err.message || "Failed to load form data");
+    } finally {
+      setLoadingForm(false);
     }
+  }
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -89,6 +98,8 @@ export default function AddScreen() {
   }
 
   async function save() {
+    if (saving) return;
+
     let isValid = true;
 
     if (rawAmount <= 0) {
@@ -138,13 +149,39 @@ export default function AddScreen() {
     }
   }
 
+  const getChipStyle = (isActive: boolean) => [
+    styles.chip,
+    {
+      backgroundColor: isActive
+        ? colors.blue
+        : theme === "light"
+          ? colors.panel
+          : "#2c2c2e",
+      borderColor: isActive ? colors.blue : colors.line,
+    }
+  ];
+
+  const getChipTextStyle = (isActive: boolean) => [
+    styles.chipText,
+    {
+      color: isActive ? "#ffffff" : colors.muted,
+    }
+  ];
+
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-      <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
+    <Screen contentStyle={styles.scrollContent}>
+      <TopProgressBar visible={saving} />
         <View>
-          <Text style={styles.title}>Add Transaction</Text>
-          <Text style={styles.subtitle}>Catat uang masuk, keluar, atau pindah dompet.</Text>
+          <Text style={[styles.title, { color: colors.ink }]}>Add Transaction</Text>
+          <Text style={[styles.subtitle, { color: colors.muted }]}>Catat uang masuk, keluar, atau pindah dompet.</Text>
         </View>
+
+        {formError ? (
+          <ErrorState message={formError} onRetry={fetchData} />
+        ) : loadingForm ? (
+          <LoadingState title="Menyiapkan form transaksi" subtitle="Memuat wallet, kategori, dan budget kamu." />
+        ) : (
+          <>
 
         <Card>
           <View style={styles.form}>
@@ -165,13 +202,13 @@ export default function AddScreen() {
 
         {/* Wallet Selection */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.section}>Wallet Asal</Text>
-          {walletError ? <Text style={styles.sectionError}>{walletError}</Text> : null}
+          <Text style={[styles.section, { color: colors.ink }]}>Wallet Asal</Text>
+          {walletError ? <Text style={[styles.sectionError, { color: colors.red }]}>{walletError}</Text> : null}
         </View>
         <View style={styles.chips}>
           {wallets.map((wallet) => (
-            <Pressable key={wallet.id} onPress={() => handleWalletSelect(wallet.id)} style={[styles.chip, walletId === wallet.id && styles.active]}>
-              <Text style={[styles.chipText, walletId === wallet.id && styles.activeText]}>{wallet.name}</Text>
+            <Pressable key={wallet.id} hitSlop={4} onPress={() => handleWalletSelect(wallet.id)} style={getChipStyle(walletId === wallet.id)}>
+              <Text numberOfLines={1} style={getChipTextStyle(walletId === wallet.id)}>{wallet.name}</Text>
             </Pressable>
           ))}
         </View>
@@ -179,15 +216,15 @@ export default function AddScreen() {
         {type === "transfer" ? (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.section}>Wallet Tujuan</Text>
-              {targetWalletError ? <Text style={styles.sectionError}>{targetWalletError}</Text> : null}
+              <Text style={[styles.section, { color: colors.ink }]}>Wallet Tujuan</Text>
+              {targetWalletError ? <Text style={[styles.sectionError, { color: colors.red }]}>{targetWalletError}</Text> : null}
             </View>
             <View style={styles.chips}>
               {wallets
                 .filter((wallet) => wallet.id !== walletId)
                 .map((wallet) => (
-                  <Pressable key={wallet.id} onPress={() => handleTargetWalletSelect(wallet.id)} style={[styles.chip, targetWalletId === wallet.id && styles.active]}>
-                    <Text style={[styles.chipText, targetWalletId === wallet.id && styles.activeText]}>{wallet.name}</Text>
+                  <Pressable key={wallet.id} hitSlop={4} onPress={() => handleTargetWalletSelect(wallet.id)} style={getChipStyle(targetWalletId === wallet.id)}>
+                    <Text numberOfLines={1} style={getChipTextStyle(targetWalletId === wallet.id)}>{wallet.name}</Text>
                   </Pressable>
                 ))}
             </View>
@@ -195,15 +232,15 @@ export default function AddScreen() {
         ) : (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.section}>Kategori</Text>
-              {categoryError ? <Text style={styles.sectionError}>{categoryError}</Text> : null}
+              <Text style={[styles.section, { color: colors.ink }]}>Kategori</Text>
+              {categoryError ? <Text style={[styles.sectionError, { color: colors.red }]}>{categoryError}</Text> : null}
             </View>
             <View style={styles.chips}>
               {categories
                 .filter((category) => category.kind === type)
                 .map((category) => (
-                  <Pressable key={category.id} onPress={() => handleCategorySelect(category.id)} style={[styles.chip, categoryId === category.id && styles.active]}>
-                    <Text style={[styles.chipText, categoryId === category.id && styles.activeText]}>{category.name}</Text>
+                  <Pressable key={category.id} hitSlop={4} onPress={() => handleCategorySelect(category.id)} style={getChipStyle(categoryId === category.id)}>
+                    <Text numberOfLines={1} style={getChipTextStyle(categoryId === category.id)}>{category.name}</Text>
                   </Pressable>
                 ))}
             </View>
@@ -213,15 +250,15 @@ export default function AddScreen() {
         {type === "expense" ? (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.section}>Budget (Opsional)</Text>
+              <Text style={[styles.section, { color: colors.ink }]}>Budget (Opsional)</Text>
             </View>
             <View style={styles.chips}>
-              <Pressable onPress={() => setBudgetId("")} style={[styles.chip, !budgetId && styles.active]}>
-                <Text style={[styles.chipText, !budgetId && styles.activeText]}>No budget</Text>
+              <Pressable hitSlop={4} onPress={() => setBudgetId("")} style={getChipStyle(!budgetId)}>
+                <Text numberOfLines={1} style={getChipTextStyle(!budgetId)}>No budget</Text>
               </Pressable>
               {budgets.map((budget) => (
-                <Pressable key={budget.id} onPress={() => setBudgetId(budget.id)} style={[styles.chip, budgetId === budget.id && styles.active]}>
-                  <Text style={[styles.chipText, budgetId === budget.id && styles.activeText]}>{budget.name}</Text>
+                <Pressable key={budget.id} hitSlop={4} onPress={() => setBudgetId(budget.id)} style={getChipStyle(budgetId === budget.id)}>
+                  <Text numberOfLines={1} style={getChipTextStyle(budgetId === budget.id)}>{budget.name}</Text>
                 </Pressable>
               ))}
             </View>
@@ -231,24 +268,21 @@ export default function AddScreen() {
         <View style={{ marginTop: 14 }}>
           <Button label="Save Transaction" onPress={save} loading={saving} disabled={saving} />
         </View>
-      </ScrollView>
-    </SafeAreaView>
+          </>
+        )}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
-  scrollContainer: { flex: 1, backgroundColor: colors.bg },
-  scrollContent: { padding: 16, paddingBottom: 40, gap: 14 },
-  title: { color: colors.ink, fontSize: 28, fontWeight: "900" },
-  subtitle: { color: colors.muted, marginTop: 6 },
+  scrollContent: { gap: 14 },
+  title: { fontSize: 28, fontWeight: "900", letterSpacing: 0 },
+  subtitle: { marginTop: 6, fontSize: 15, letterSpacing: 0, lineHeight: 21 },
   form: { gap: 12 },
-  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 },
-  section: { color: colors.ink, fontWeight: "900", fontSize: 16 },
-  sectionError: { color: colors.red, fontSize: 12, fontWeight: "700" },
+  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 10, marginTop: 10 },
+  section: { fontWeight: "900", fontSize: 16, letterSpacing: 0 },
+  sectionError: { flexShrink: 1, fontSize: 12, fontWeight: "700", textAlign: "right" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
-  chip: { paddingHorizontal: 12, height: 38, borderRadius: 8, borderWidth: 1, borderColor: colors.line, justifyContent: "center", backgroundColor: "#fff" },
-  active: { backgroundColor: colors.ink, borderColor: colors.ink },
-  chipText: { color: colors.muted, fontWeight: "800" },
-  activeText: { color: "#fff" },
+  chip: { minHeight: 42, maxWidth: "100%", paddingHorizontal: 14, paddingVertical: 9, borderRadius: 11, borderWidth: 1, justifyContent: "center" },
+  chipText: { fontSize: 13, fontWeight: "700", letterSpacing: 0 },
 });

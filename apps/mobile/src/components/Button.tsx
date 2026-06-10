@@ -15,6 +15,7 @@ export function Button({ label, onPress, tone = "primary", loading = false, disa
   const scale = useRef(new Animated.Value(1)).current;
 
   function handlePressIn() {
+    if (isDisabled) return;
     Animated.spring(scale, {
       toValue: 0.96,
       useNativeDriver: true,
@@ -54,6 +55,10 @@ export function Button({ label, onPress, tone = "primary", loading = false, disa
   return (
     <Animated.View style={{ transform: [{ scale }], opacity: isDisabled ? 0.6 : 1 }}>
       <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isDisabled, busy: loading }}
+        disabled={isDisabled}
+        hitSlop={8}
         onPress={isDisabled ? undefined : onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
@@ -65,7 +70,7 @@ export function Button({ label, onPress, tone = "primary", loading = false, disa
             color={tone === "soft" ? colors.ink : "#ffffff"}
           />
         ) : (
-          <Text style={[styles.label, labelStyle]}>
+          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82} style={[styles.label, labelStyle]}>
             {label}
           </Text>
         )}
@@ -76,15 +81,16 @@ export function Button({ label, onPress, tone = "primary", loading = false, disa
 
 const styles = StyleSheet.create({
   button: {
-    height: 48,
+    minHeight: 48,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
   },
   label: {
     fontSize: 15,
     fontWeight: "700",
-    letterSpacing: -0.24,
+    letterSpacing: 0,
   },
 });

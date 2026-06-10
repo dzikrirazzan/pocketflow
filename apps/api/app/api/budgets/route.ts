@@ -2,6 +2,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { budgets } from "@/db/schema";
 import { authErrorResponse, requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { assertCategoryBelongsToUser } from "@/lib/ownership";
 import { budgetInput } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,8 @@ export async function POST(request: Request) {
   try {
     const user = await requireUser(request);
     const input = budgetInput.parse(await request.json());
+    await assertCategoryBelongsToUser(user.id, input.categoryId);
+
     const [budget] = await db
       .insert(budgets)
       .values({

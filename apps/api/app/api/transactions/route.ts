@@ -3,6 +3,7 @@ import { transactions, wallets } from "@/db/schema";
 import { authErrorResponse, requireUser } from "@/lib/auth";
 import { periodRange } from "@/lib/dates";
 import { db } from "@/lib/db";
+import { assertTransactionReferencesBelongToUser } from "@/lib/ownership";
 import { transactionInput } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
     const user = await requireUser(request);
     const input = transactionInput.parse(await request.json());
     const amount = input.amount.toFixed(2);
+    await assertTransactionReferencesBelongToUser(user.id, input);
 
     const result = await db.transaction(async (tx) => {
       const [transaction] = await tx

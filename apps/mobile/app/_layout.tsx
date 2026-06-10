@@ -1,4 +1,4 @@
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Stack, Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,6 +23,7 @@ function AppNavigator() {
     return (
       <View style={[styles.loader, { backgroundColor: colors.bg }]}>
         <ActivityIndicator size="large" color={colors.teal} />
+        <Text style={[styles.loaderText, { color: colors.muted }]}>Memuat PocketFlow...</Text>
       </View>
     );
   }
@@ -111,6 +112,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    gap: 12,
+  },
+  loaderText: {
+    fontSize: 13,
+    fontWeight: "700",
   },
   tabBar: {
     height: 84,

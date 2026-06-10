@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
-import { colors } from "@/theme/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Screen } from "@/components/Screen";
 import { Card } from "@/components/Card";
 import { Field } from "@/components/Field";
@@ -9,6 +9,7 @@ import { Button } from "@/components/Button";
 
 export default function LoginScreen() {
   const { signIn, signUp } = useAuth();
+  const { colors, theme } = useTheme();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,6 +19,8 @@ export default function LoginScreen() {
   const busy = authLoading || registerLoading;
 
   async function handleSignIn() {
+    if (busy) return;
+
     if (!email.trim() || !password.trim()) {
       Alert.alert("Error", "Email dan password harus diisi.");
       return;
@@ -34,6 +37,8 @@ export default function LoginScreen() {
   }
 
   async function handleSignUp() {
+    if (busy) return;
+
     if (!email.trim() || !password.trim()) {
       Alert.alert("Error", "Email dan password harus diisi.");
       return;
@@ -58,8 +63,8 @@ export default function LoginScreen() {
     <Screen>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>PocketFlow</Text>
-          <Text style={styles.subtitle}>Kelola keuanganmu dengan mudah</Text>
+          <Text style={[styles.title, { color: colors.teal }]}>PocketFlow</Text>
+          <Text style={[styles.subtitle, { color: colors.muted }]}>Kelola keuanganmu dengan mudah</Text>
         </View>
 
         <Card>
@@ -70,6 +75,9 @@ export default function LoginScreen() {
               onChangeText={setEmail}
               placeholder="email@contoh.com"
               autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              textContentType="emailAddress"
               keyboardType="email-address"
             />
 
@@ -79,6 +87,7 @@ export default function LoginScreen() {
               onChangeText={setPassword}
               placeholder="Minimal 6 karakter"
               secureTextEntry
+              textContentType="password"
             />
 
             <View style={styles.buttons}>
@@ -117,11 +126,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "800",
-    color: colors.teal,
   },
   subtitle: {
     fontSize: 16,
-    color: colors.muted,
     marginTop: 4,
   },
   form: {

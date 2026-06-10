@@ -1,8 +1,24 @@
+import { PocketFlowWebApp } from "./web-app";
+
 export default function Home() {
+  const supabaseUrl =
+    process.env.SUPABASE_URL ??
+    process.env.NEXT_PUBLIC_SUPABASE_URL ??
+    process.env.EXPO_PUBLIC_SUPABASE_URL ??
+    "";
+  const supabaseAnonKey =
+    process.env.SUPABASE_ANON_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ??
+    "";
+
   return (
-    <main style={{ fontFamily: "system-ui", padding: 32 }}>
-      <h1>PocketFlow API</h1>
-      <p>Finance tracker backend is running.</p>
-    </main>
+    <PocketFlowWebApp
+      config={{
+        supabaseUrl,
+        supabaseAnonKey,
+        isConfigured: Boolean(supabaseUrl && supabaseAnonKey),
+      }}
+    />
   );
 }

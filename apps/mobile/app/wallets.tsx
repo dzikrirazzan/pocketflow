@@ -5,6 +5,7 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Field } from "@/components/Field";
 import { Screen } from "@/components/Screen";
+import { ErrorState, LoadingState, TopProgressBar } from "@/components/StateViews";
 import { api } from "@/lib/api";
 import { rupiah, parseRupiahInput } from "@/lib/format";
 import { Wallet } from "@/lib/types";
@@ -17,26 +18,34 @@ export default function WalletsScreen() {
   const [displayBalance, setDisplayBalance] = useState("");
   const [rawBalance, setRawBalance] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [adding, setAdding] = useState(false);
   const [editingWallet, setEditingWallet] = useState<Wallet | null>(null);
+  const [deletingWalletId, setDeletingWalletId] = useState<string | null>(null);
 
   // Form validation errors
   const [nameError, setNameError] = useState("");
   const [balanceError, setBalanceError] = useState("");
 
-  async function load() {
+  async function load(showInitial = false) {
+    if (showInitial) setLoading(true);
+    else setRefreshing(true);
+    setLoadError("");
+
     try {
       const data = await api.wallets();
       setWallets(data.wallets);
     } catch (err: any) {
-      Alert.alert("Error", err?.message ?? "Gagal memuat daftar wallet.");
+      setLoadError(err?.message ?? "Gagal memuat daftar wallet.");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }
 
   useEffect(() => {
-    load();
+    load(true);
   }, []);
 
   function handleBalanceChange(text: string) {
@@ -71,6 +80,8 @@ export default function WalletsScreen() {
   }
 
   async function saveWallet() {
+    if (adding) return;
+
     let isValid = true;
     if (!name.trim()) {
       setNameError("Nama wallet wajib diisi.");
@@ -106,7 +117,7 @@ export default function WalletsScreen() {
       setName("");
       setDisplayBalance("");
       setRawBalance(0);
-      load();
+      await load(false);
     } catch (err: any) {
       Alert.alert("Error", err?.message ?? "Gagal menyimpan wallet.");
     } finally {
@@ -124,15 +135,17 @@ export default function WalletsScreen() {
           text: "Hapus",
           style: "destructive",
           onPress: async () => {
-            setLoading(true);
+            if (deletingWalletId) return;
+
+            setDeletingWalletId(id);
             try {
               await api.deleteWallet(id);
               Alert.alert("Sukses", "Wallet berhasil dihapus.");
-              load();
+              await load(false);
             } catch (err: any) {
               Alert.alert("Error", err?.message ?? "Gagal menghapus wallet.");
             } finally {
-              setLoading(false);
+              setDeletingWalletId(null);
             }
           }
         }
@@ -143,7 +156,11 @@ export default function WalletsScreen() {
   if (loading) {
     return (
       <Screen>
-        <ActivityIndicator size="large" color={colors.blue} style={{ marginTop: 40 }} />
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.ink }]}>Wallets</Text>
+          <Text style={[styles.subtitle, { color: colors.muted }]}>Pisahkan cash, bank, e-wallet, dan tabungan.</Text>
+        </View>
+        <LoadingState title="Memuat wallet" subtitle="Menyiapkan daftar dompet dan saldo terbaru." />
       </Screen>
     );
   }
@@ -154,6 +171,10 @@ export default function WalletsScreen() {
         <Text style={[styles.title, { color: colors.ink }]}>Wallets</Text>
         <Text style={[styles.subtitle, { color: colors.muted }]}>Pisahkan cash, bank, e-wallet, dan tabungan.</Text>
       </View>
+
+      <TopProgressBar visible={refreshing || adding || Boolean(deletingWalletId)} />
+
+      {loadError ? <ErrorState message={loadError} onRetry={() => load(false)} /> : null}
 
       <Card>
         <View style={styles.form}>
@@ -206,19 +227,39 @@ export default function WalletsScreen() {
           <Card key={wallet.id}>
             <View style={styles.row}>
               <View style={[styles.dot, { backgroundColor: wallet.color }]} />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.name, { color: colors.ink }]}>{wallet.name}</Text>
-                <Text style={[styles.meta, { color: colors.muted }]}>{wallet.type}</Text>
+              <View style={styles.walletTextWrap}>
+                <Text numberOfLines={1} style={[styles.name, { color: colors.ink }]}>{wallet.name}</Text>
+                <Text numberOfLines={1} style={[styles.meta, { color: colors.muted }]}>{wallet.type}</Text>
               </View>
-              <Text style={[styles.amount, { color: colors.ink }]}>{rupiah(wallet.balance)}</Text>
-              
-              <View style={styles.actionRow}>
-                <TouchableOpacity onPress={() => startEditWallet(wallet)} style={[styles.actionBtn, { backgroundColor: theme === "light" ? "#f1f5f9" : "#2c2c2e" }]}>
-                  <Ionicons name="pencil-outline" size={16} color={colors.ink} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDeleteWallet(wallet.id, wallet.name)} style={[styles.deleteBtn, { backgroundColor: theme === "light" ? "#fef2f2" : "#3b1e1e" }]}>
-                  <Ionicons name="trash-outline" size={16} color={colors.red} />
-                </TouchableOpacity>
+              <View style={styles.walletRightWrap}>
+                <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82} style={[styles.amount, { color: colors.ink }]}>
+                  {rupiah(wallet.balance)}
+                </Text>
+
+                <View style={styles.actionRow}>
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    hitSlop={6}
+                    disabled={Boolean(deletingWalletId) || adding}
+                    onPress={() => startEditWallet(wallet)}
+                    style={[styles.actionBtn, { backgroundColor: theme === "light" ? "#f1f5f9" : "#2c2c2e" }]}
+                  >
+                    <Ionicons name="pencil-outline" size={17} color={colors.ink} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    hitSlop={6}
+                    disabled={Boolean(deletingWalletId) || adding}
+                    onPress={() => handleDeleteWallet(wallet.id, wallet.name)}
+                    style={[styles.deleteBtn, { backgroundColor: theme === "light" ? "#fef2f2" : "#3b1e1e" }]}
+                  >
+                    {deletingWalletId === wallet.id ? (
+                      <ActivityIndicator size="small" color={colors.red} />
+                    ) : (
+                      <Ionicons name="trash-outline" size={17} color={colors.red} />
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </Card>
@@ -230,18 +271,20 @@ export default function WalletsScreen() {
 
 const styles = StyleSheet.create({
   header: { marginBottom: 4 },
-  title: { fontSize: 32, fontWeight: "800", letterSpacing: -0.8 },
-  subtitle: { fontSize: 16, marginTop: 4, letterSpacing: -0.24 },
+  title: { fontSize: 32, fontWeight: "800", letterSpacing: 0 },
+  subtitle: { fontSize: 16, marginTop: 4, letterSpacing: 0, lineHeight: 22 },
   form: { gap: 12 },
-  formHeader: { fontWeight: "800", fontSize: 16, marginBottom: 4, letterSpacing: -0.15 },
+  formHeader: { fontWeight: "800", fontSize: 16, marginBottom: 4, letterSpacing: 0 },
   row: { flexDirection: "row", alignItems: "center", gap: 12 },
+  walletTextWrap: { flex: 1, minWidth: 0 },
+  walletRightWrap: { alignItems: "flex-end", gap: 8, maxWidth: "48%" },
   dot: { width: 12, height: 12, borderRadius: 6 },
-  name: { fontWeight: "700", fontSize: 16, letterSpacing: -0.2 },
+  name: { fontWeight: "700", fontSize: 16, letterSpacing: 0 },
   meta: { marginTop: 3, textTransform: "capitalize", fontSize: 12, fontWeight: "500" },
-  amount: { fontWeight: "800", fontSize: 16, letterSpacing: -0.2 },
-  actionRow: { flexDirection: "row", alignItems: "center", gap: 6, marginLeft: 8 },
-  actionBtn: { padding: 6, borderRadius: 6 },
-  deleteBtn: { padding: 6, borderRadius: 6 },
+  amount: { fontWeight: "800", fontSize: 16, letterSpacing: 0, textAlign: "right" },
+  actionRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  actionBtn: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  deleteBtn: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   buttonRow: { flexDirection: "row", gap: 10, marginTop: 6 },
   emptyCenter: { alignItems: "center", justifyContent: "center", paddingVertical: 40, gap: 10 },
   emptyText: { fontWeight: "600", fontSize: 14, textAlign: "center", paddingHorizontal: 20 },
