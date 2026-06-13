@@ -104,20 +104,25 @@ const navigationItems: Array<[ViewKey, string]> = [
   ["profile", "Profile"],
 ];
 
-const marketingFeatures = [
+const marketingFeatures: Array<{ icon: "wallet" | "target" | "sync"; title: string; description: string }> = [
   {
-    title: "Wallet clarity",
-    description: "Cash, bank, and e-wallet balances stay separated so every spend lands in the right place.",
+    icon: "wallet",
+    title: "Every wallet in one place",
+    description: "Cash, bank, and e-wallet balances stay separated, so every spend lands in the right account.",
   },
   {
-    title: "Budget pressure",
-    description: "Daily, weekly, and monthly limits show what is still safe to spend.",
+    icon: "target",
+    title: "Budgets that hold the line",
+    description: "Daily, weekly, and monthly limits show what is still safe to spend at a glance.",
   },
   {
-    title: "Shared account",
-    description: "Web and mobile use the same Supabase identity, so the ledger follows your real usage.",
+    icon: "sync",
+    title: "Synced web and mobile",
+    description: "One account powers the dashboard and the iPhone app, so your ledger is always current.",
   },
 ];
+
+const heroHighlights = ["Bank, cash & e-wallets", "Daily, weekly & monthly budgets", "Web + iOS, always in sync"];
 
 function localDateTimeValue(date = new Date()) {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
@@ -199,7 +204,8 @@ function getInitialTheme(): ThemeMode {
   const storedTheme = window.localStorage.getItem("pocketflow-theme");
   if (storedTheme === "dark" || storedTheme === "light") return storedTheme;
 
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  // Default to the polished light theme on first visit; the toggle still persists a choice.
+  return "light";
 }
 
 export function PocketFlowWebApp({ config }: { config: AppConfig }) {
@@ -647,26 +653,52 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
     return (
       <main className="site-shell">
         <ProductNav mode="marketing" theme={theme} onToggleTheme={toggleTheme} />
+        <div className="hero-glow" aria-hidden="true" />
         <section className="landing-hero" id="top">
           <div className="hero-copy animate-in">
-            <h1>Daily cashflow, kept in order.</h1>
-            <p>Track wallets, budgets, and transactions from web or iPhone with one synced Supabase account.</p>
+            <span className="eyebrow">
+              <span className="eyebrow-dot" aria-hidden="true" />
+              Personal finance, in sync
+            </span>
+            <h1>Your money, finally in order.</h1>
+            <p>
+              PocketFlow keeps your wallets, budgets, and transactions in one calm dashboard — synced across web and iPhone with a single
+              account.
+            </p>
             <div className="hero-actions">
-              <a className="primary-button" href="#auth-panel">
-                Start tracking
+              <a className="primary-button lg" href="#auth-panel">
+                Start for free
               </a>
-              <a className="ghost-button" href="#features">
-                See features
+              <a className="ghost-button lg" href="#preview">
+                See the dashboard
               </a>
             </div>
+            <ul className="hero-highlights">
+              {heroHighlights.map((item) => (
+                <li key={item}>
+                  <CheckIcon />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
 
-          <section className="auth-card hero-auth system-card animate-in" id="auth-panel" aria-label="PocketFlow authentication">
-            <div className="brand-lockup">
-              <span className="brand-mark">PF</span>
-              <div>
-                <h2>PocketFlow</h2>
-                <p>One login keeps web and mobile in sync.</p>
+          <section className="auth-card hero-auth animate-in" id="auth-panel" aria-label="PocketFlow authentication">
+            <div className="auth-card-head">
+              <div className="brand-lockup">
+                <span className="brand-mark">PF</span>
+                <div>
+                  <h2>{authMode === "signin" ? "Welcome back" : "Create your account"}</h2>
+                  <p>One login keeps web and mobile in sync.</p>
+                </div>
+              </div>
+              <div className="auth-switch" role="tablist" aria-label="Authentication mode">
+                <button type="button" role="tab" aria-selected={authMode === "signin"} className={authMode === "signin" ? "active" : ""} onClick={() => setAuthMode("signin")}>
+                  Sign in
+                </button>
+                <button type="button" role="tab" aria-selected={authMode === "signup"} className={authMode === "signup" ? "active" : ""} onClick={() => setAuthMode("signup")}>
+                  Sign up
+                </button>
               </div>
             </div>
 
@@ -689,28 +721,31 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
               </label>
               {authMessage ? <div className={authMessage.includes("created") ? "notice" : "notice error"}>{authMessage}</div> : null}
               <button className="primary-button wide" disabled={actionBusy === "auth"} type="submit">
-                {actionBusy === "auth" ? "Memproses..." : authMode === "signin" ? "Sign In" : "Create Account"}
+                {actionBusy === "auth" ? "Processing…" : authMode === "signin" ? "Sign In" : "Create Account"}
               </button>
             </form>
-
-            <button className="ghost-button wide" type="button" onClick={() => setAuthMode(authMode === "signin" ? "signup" : "signin")}>
-              {authMode === "signin" ? "Create an account" : "I already have an account"}
-            </button>
           </section>
         </section>
 
-        <section className="product-preview-section" aria-label="PocketFlow dashboard preview">
+        <section className="product-preview-section" id="preview" aria-label="PocketFlow dashboard preview">
+          <div className="section-heading center">
+            <span className="eyebrow">
+              <span className="eyebrow-dot" aria-hidden="true" />
+              The dashboard
+            </span>
+            <h2>Clarity the moment you open it.</h2>
+            <p>Balances, cash flow, and recent activity — organized so you always know where you stand.</p>
+          </div>
           <LandingPreview />
         </section>
 
         <section className="feature-section" id="features">
-          <div className="section-heading">
-            <h2>Made for the moment money moves.</h2>
-            <p>Open the app, choose the wallet, attach a category or budget, and keep the review surface calm.</p>
-          </div>
           <div className="feature-grid">
             {marketingFeatures.map((feature) => (
               <article className="feature-card" key={feature.title}>
+                <span className="feature-icon">
+                  <FeatureIcon icon={feature.icon} />
+                </span>
                 <h3>{feature.title}</h3>
                 <p>{feature.description}</p>
               </article>
@@ -718,30 +753,12 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
           </div>
         </section>
 
-        <section className="detail-section">
-          <div>
-            <h2>A shared ledger for web and mobile.</h2>
-            <p>Supabase Auth keeps the same user attached to every API request, so the dashboard and Expo app stay aligned.</p>
-          </div>
-          <div className="detail-visual" aria-label="PocketFlow transaction anatomy">
-            <div className="visual-row">
-              <span>Expense</span>
-              <strong>{rupiah(128000)}</strong>
-            </div>
-            <div className="visual-row">
-              <span>Wallet</span>
-              <strong>GoPay</strong>
-            </div>
-            <div className="visual-row">
-              <span>Budget</span>
-              <strong>Food monthly</strong>
-            </div>
-          </div>
-        </section>
-
         <section className="cta-banner">
-          <h2>Start from your next transaction.</h2>
-          <a className="primary-button" href="#auth-panel">
+          <div>
+            <h2>Start from your next transaction.</h2>
+            <p>Free to use. Your web and mobile stay perfectly in sync.</p>
+          </div>
+          <a className="primary-button lg" href="#auth-panel">
             Open PocketFlow
           </a>
         </section>
@@ -1235,54 +1252,149 @@ function ProductFooter() {
 }
 
 function LandingPreview() {
-  const previewTransactions = [
-    ["Lunch", "GoPay", "Food", "-Rp128.000"],
-    ["Client invoice", "BCA", "Income", "+Rp4.800.000"],
-    ["Coffee", "Cash", "Daily", "-Rp32.000"],
+  const previewStats = [
+    { label: "Total Balance", value: rupiah(18450000), tone: "brand" },
+    { label: "Income", value: rupiah(8200000), tone: "income" },
+    { label: "Expenses", value: rupiah(3180000), tone: "expense" },
+    { label: "Net Savings", value: rupiah(5020000), tone: "income" },
+  ] as const;
+
+  const previewBars = [
+    { income: 62, expense: 38 },
+    { income: 74, expense: 45 },
+    { income: 58, expense: 52 },
+    { income: 86, expense: 40 },
+    { income: 70, expense: 48 },
+    { income: 92, expense: 44 },
   ];
 
+  const previewTransactions = [
+    { note: "Client invoice", meta: "BCA", badge: "Income", amount: "+Rp4.800.000", positive: true },
+    { note: "Groceries", meta: "GoPay", badge: "Food", amount: "-Rp412.000", positive: false },
+    { note: "Coffee", meta: "Cash", badge: "Daily", amount: "-Rp32.000", positive: false },
+  ];
+
+  const linePoints = previewBars
+    .map((bar, index) => {
+      const x = 8 + (index * (100 - 16)) / (previewBars.length - 1);
+      const y = 70 - (bar.income - bar.expense) * 0.55;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
   return (
-    <div className="preview-shell">
-      <div className="preview-header">
-        <div>
-          <span>PocketFlow preview</span>
-          <strong>Monthly overview</strong>
-        </div>
-        <button className="secondary-button" type="button">
-          Sync
-        </button>
+    <div className="preview-frame">
+      <div className="preview-chrome" aria-hidden="true">
+        <span className="preview-dot" />
+        <span className="preview-dot" />
+        <span className="preview-dot" />
+        <span className="preview-url">app.pocketflow.id/dashboard</span>
       </div>
-      <div className="preview-metrics">
-        <div>
-          <span>Total Balance</span>
-          <strong>{rupiah(18450000)}</strong>
+      <div className="preview-shell">
+        <div className="preview-topbar">
+          <div>
+            <span className="preview-eyebrow">Welcome back</span>
+            <strong>Dashboard</strong>
+          </div>
+          <div className="preview-period" aria-hidden="true">
+            <span>Day</span>
+            <span>Week</span>
+            <span className="active">Month</span>
+            <span>Year</span>
+          </div>
         </div>
-        <div>
-          <span>Net</span>
-          <strong>{rupiah(1620000)}</strong>
-        </div>
-        <div>
-          <span>Expense</span>
-          <strong>{rupiah(3180000)}</strong>
-        </div>
-      </div>
-      <div className="preview-grid">
-        <div className="preview-chart" aria-hidden="true">
-          {[72, 48, 62, 35].map((height, index) => (
-            <span key={height} style={{ height: `${height + index * 2}%` }} />
+
+        <div className="preview-stats">
+          {previewStats.map((stat) => (
+            <div className={`preview-stat preview-${stat.tone}`} key={stat.label}>
+              <span className="preview-stat-head">
+                <i className="preview-stat-dot" aria-hidden="true" />
+                {stat.label}
+              </span>
+              <strong>{stat.value}</strong>
+            </div>
           ))}
         </div>
-        <div className="preview-table">
-          {previewTransactions.map(([note, wallet, category, amount]) => (
-            <div key={note}>
-              <span>{note}</span>
-              <small>{wallet} / {category}</small>
-              <strong className={amount.startsWith("+") ? "good-text" : "bad-text"}>{amount}</strong>
+
+        <div className="preview-chart-card">
+          <div className="preview-chart-head">
+            <strong>Cash Flow Overview</strong>
+            <div className="preview-legend" aria-hidden="true">
+              <span><i className="dot-income" />Income</span>
+              <span><i className="dot-expense" />Expenses</span>
+              <span><i className="dot-net" />Net</span>
+            </div>
+          </div>
+          <div className="preview-chart" aria-hidden="true">
+            <div className="preview-bars">
+              {previewBars.map((bar, index) => (
+                <div className="preview-bar-group" key={index}>
+                  <span className="preview-bar income" style={{ height: `${bar.income}%` }} />
+                  <span className="preview-bar expense" style={{ height: `${bar.expense}%` }} />
+                </div>
+              ))}
+            </div>
+            <svg className="preview-line" viewBox="0 0 100 80" preserveAspectRatio="none">
+              <polyline points={linePoints} fill="none" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </div>
+
+        <div className="preview-list" aria-hidden="true">
+          {previewTransactions.map((item) => (
+            <div className="preview-row" key={item.note}>
+              <span className="preview-avatar">{item.note.charAt(0)}</span>
+              <div className="preview-row-main">
+                <strong>{item.note}</strong>
+                <span>{item.meta}</span>
+              </div>
+              <span className="preview-badge">{item.badge}</span>
+              <strong className={item.positive ? "good-text" : "bad-text"}>{item.amount}</strong>
             </div>
           ))}
         </div>
       </div>
     </div>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m5 13 4 4L19 7" />
+    </svg>
+  );
+}
+
+function FeatureIcon({ icon }: { icon: "wallet" | "target" | "sync" }) {
+  const paths: Record<typeof icon, ReactNode> = {
+    wallet: (
+      <>
+        <path d="M3 7a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <path d="M16 12h.01" />
+      </>
+    ),
+    target: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="12" r="5" />
+        <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+      </>
+    ),
+    sync: (
+      <>
+        <path d="M21 12a9 9 0 0 1-9 9 9 9 0 0 1-7.5-4" />
+        <path d="M3 12a9 9 0 0 1 9-9 9 9 0 0 1 7.5 4" />
+        <path d="M21 3v5h-5" />
+        <path d="M3 21v-5h5" />
+      </>
+    ),
+  };
+
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {paths[icon]}
+    </svg>
   );
 }
 
