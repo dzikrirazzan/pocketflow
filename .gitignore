@@ -12,3 +12,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .vercel
+
+# Local Playwright / test artifacts
+.playwright-cli
+output

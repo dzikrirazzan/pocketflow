@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
 
 type AppConfig = {
@@ -96,6 +96,21 @@ const navigationItems: Array<[ViewKey, string]> = [
   ["budgets", "Budgets"],
   ["reports", "Reports"],
   ["profile", "Profile"],
+];
+
+const marketingFeatures = [
+  {
+    title: "Wallet clarity",
+    description: "Cash, bank, and e-wallet balances stay separated so every spend lands in the right place.",
+  },
+  {
+    title: "Budget pressure",
+    description: "Daily, weekly, and monthly limits show what is still safe to spend.",
+  },
+  {
+    title: "Shared account",
+    description: "Web and mobile use the same Supabase identity, so the ledger follows your real usage.",
+  },
 ];
 
 function localDateTimeValue(date = new Date()) {
@@ -228,7 +243,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
   const apiRequest = useCallback(
     async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
       const token = session?.access_token;
-      if (!token) throw new Error("Session belum aktif. Login ulang dulu.");
+      if (!token) throw new Error("Session expired. Please sign in again.");
 
       const response = await fetch(path, {
         ...options,
@@ -277,7 +292,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
         setTransactions(transactionData.transactions);
         setSummary(summaryData);
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Gagal memuat data.");
+        setError(loadError instanceof Error ? loadError.message : "Failed to load data.");
       } finally {
         setLoadingData(false);
         setRefreshing(false);
@@ -357,7 +372,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
           password,
         });
         if (signUpError) throw signUpError;
-        setAuthMessage("Akun dibuat. Kalau Supabase meminta email confirmation, cek inbox dulu sebelum login.");
+        setAuthMessage("Account created. If email confirmation is required, check your inbox before signing in.");
       }
     } catch (authError) {
       setAuthMessage(authError instanceof Error ? authError.message : "Autentikasi gagal.");
@@ -383,17 +398,17 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
 
     const amount = normalizeAmount(transactionForm.amount);
     if (!amount || !transactionForm.walletId) {
-      setError("Nominal dan wallet wajib diisi.");
+      setError("Amount and wallet are required.");
       return;
     }
 
     if (transactionForm.type === "transfer" && (!transactionForm.targetWalletId || transactionForm.targetWalletId === transactionForm.walletId)) {
-      setError("Transfer butuh wallet tujuan yang berbeda.");
+      setError("Transfers need a different destination wallet.");
       return;
     }
 
     if (transactionForm.type !== "transfer" && !transactionForm.categoryId) {
-      setError("Kategori wajib dipilih.");
+      setError("Please choose a category.");
       return;
     }
 
@@ -427,7 +442,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
       setTransactionForm(defaultTransactionForm());
       await loadData(period, true);
     } catch (mutationError) {
-      setError(mutationError instanceof Error ? mutationError.message : "Gagal menyimpan transaksi.");
+      setError(mutationError instanceof Error ? mutationError.message : "Failed to save transaction.");
     } finally {
       setActionBusy("");
     }
@@ -457,7 +472,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
       await apiRequest(`/api/transactions/${id}`, { method: "DELETE" });
       await loadData(period, true);
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "Gagal menghapus transaksi.");
+      setError(deleteError instanceof Error ? deleteError.message : "Failed to delete transaction.");
     } finally {
       setActionBusy("");
     }
@@ -484,7 +499,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
       setWalletBalance("");
       await loadData(period, true);
     } catch (walletError) {
-      setError(walletError instanceof Error ? walletError.message : "Gagal menyimpan wallet.");
+      setError(walletError instanceof Error ? walletError.message : "Failed to save wallet.");
     } finally {
       setActionBusy("");
     }
@@ -499,7 +514,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
       await apiRequest(`/api/wallets/${id}`, { method: "DELETE" });
       await loadData(period, true);
     } catch (walletError) {
-      setError(walletError instanceof Error ? walletError.message : "Gagal menghapus wallet.");
+      setError(walletError instanceof Error ? walletError.message : "Failed to delete wallet.");
     } finally {
       setActionBusy("");
     }
@@ -527,7 +542,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
       setBudgetPeriod("monthly");
       await loadData(period, true);
     } catch (budgetError) {
-      setError(budgetError instanceof Error ? budgetError.message : "Gagal menyimpan budget.");
+      setError(budgetError instanceof Error ? budgetError.message : "Failed to save budget.");
     } finally {
       setActionBusy("");
     }
@@ -542,7 +557,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
       await apiRequest(`/api/budgets/${id}`, { method: "DELETE" });
       await loadData(period, true);
     } catch (budgetError) {
-      setError(budgetError instanceof Error ? budgetError.message : "Gagal menghapus budget.");
+      setError(budgetError instanceof Error ? budgetError.message : "Failed to delete budget.");
     } finally {
       setActionBusy("");
     }
@@ -558,11 +573,11 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
               <span className="brand-mark">PF</span>
               <div>
                 <h1>PocketFlow Web</h1>
-                <p>Supabase environment untuk web belum lengkap.</p>
+                <p>Supabase environment is incomplete.</p>
               </div>
             </div>
             <div className="notice error">
-              Tambahkan `SUPABASE_URL` dan `SUPABASE_ANON_KEY` di environment `apps/api`. Setelah itu akun yang sama bisa dipakai dari mobile dan website.
+              Add `SUPABASE_URL` and `SUPABASE_ANON_KEY` to the `apps/api` environment. Once set, the same account works across mobile and web.
             </div>
           </div>
         </section>
@@ -581,7 +596,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
               <span />
               <span />
             </div>
-            <p className="muted">Memuat session PocketFlow...</p>
+            <p className="muted">Loading your PocketFlow session…</p>
           </div>
         </section>
       </main>
@@ -594,16 +609,14 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
         <ProductNav mode="marketing" theme={theme} onToggleTheme={toggleTheme} />
         <section className="landing-hero" id="top">
           <div className="hero-copy animate-in">
-            <h1>
-              Command your <span>daily cashflow</span>.
-            </h1>
-            <p>Track wallets, budgets, and spend from web or iPhone with one synced Supabase account.</p>
+            <h1>Daily cashflow, kept in order.</h1>
+            <p>Track wallets, budgets, and transactions from web or iPhone with one synced Supabase account.</p>
             <div className="hero-actions">
               <a className="primary-button" href="#auth-panel">
                 Start tracking
               </a>
               <a className="ghost-button" href="#features">
-                See system
+                See features
               </a>
             </div>
           </div>
@@ -613,14 +626,14 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
               <span className="brand-mark">PF</span>
               <div>
                 <h2>PocketFlow</h2>
-                <p>Login sekali, data mobile dan web tetap sinkron.</p>
+                <p>One login keeps web and mobile in sync.</p>
               </div>
             </div>
 
             <form className="auth-form" onSubmit={handleAuthSubmit}>
               <label>
                 Email
-                <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" placeholder="email@contoh.com" required />
+                <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" placeholder="you@example.com" required />
               </label>
               <label>
                 Password
@@ -629,59 +642,48 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                   onChange={(event) => setPassword(event.target.value)}
                   type="password"
                   autoComplete={authMode === "signin" ? "current-password" : "new-password"}
-                  placeholder="Minimal 6 karakter"
+                  placeholder="At least 6 characters"
                   minLength={6}
                   required
                 />
               </label>
-              {authMessage ? <div className={authMessage.includes("dibuat") ? "notice" : "notice error"}>{authMessage}</div> : null}
+              {authMessage ? <div className={authMessage.includes("created") ? "notice" : "notice error"}>{authMessage}</div> : null}
               <button className="primary-button wide" disabled={actionBusy === "auth"} type="submit">
                 {actionBusy === "auth" ? "Memproses..." : authMode === "signin" ? "Sign In" : "Create Account"}
               </button>
             </form>
 
             <button className="ghost-button wide" type="button" onClick={() => setAuthMode(authMode === "signin" ? "signup" : "signin")}>
-              {authMode === "signin" ? "Buat akun baru" : "Sudah punya akun"}
+              {authMode === "signin" ? "Create an account" : "I already have an account"}
             </button>
           </section>
         </section>
 
-        <section className="logo-strip" aria-label="PocketFlow platform support">
-          {["Supabase", "Vercel", "Expo", "React Native", "Next.js"].map((item) => (
-            <span key={item}>{item}</span>
-          ))}
+        <section className="product-preview-section" aria-label="PocketFlow dashboard preview">
+          <LandingPreview />
         </section>
 
         <section className="feature-section" id="features">
           <div className="section-heading">
-            <h2>Built for daily money decisions.</h2>
-            <p>Every surface is designed for fast entry, clear accountability, and quiet financial review.</p>
+            <h2>Made for the moment money moves.</h2>
+            <p>Open the app, choose the wallet, attach a category or budget, and keep the review surface calm.</p>
           </div>
           <div className="feature-grid">
-            <article className="feature-card">
-              <span className="feature-index">01</span>
-              <h3>Multi-wallet tracking</h3>
-              <p>Cash, bank, and e-wallet balances stay separated so every transaction lands in the right place.</p>
-            </article>
-            <article className="feature-card accent-card">
-              <span className="feature-index">02</span>
-              <h3>Budget pressure</h3>
-              <p>Daily, weekly, and monthly limits make overspending visible before the month feels gone.</p>
-            </article>
-            <article className="feature-card visual-card">
-              <span className="feature-index">03</span>
-              <h3>One account sync</h3>
-              <p>Mobile and web share the same Supabase identity, so the dashboard follows your real usage.</p>
-            </article>
+            {marketingFeatures.map((feature) => (
+              <article className="feature-card" key={feature.title}>
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
+              </article>
+            ))}
           </div>
         </section>
 
         <section className="detail-section">
           <div>
-            <h2>Designed around the transaction moment.</h2>
-            <p>Open, choose wallet, attach category or budget, save. Reports update without switching tools or reconciling spreadsheets.</p>
+            <h2>A shared ledger for web and mobile.</h2>
+            <p>Supabase Auth keeps the same user attached to every API request, so the dashboard and Expo app stay aligned.</p>
           </div>
-          <div className="detail-visual" aria-hidden="true">
+          <div className="detail-visual" aria-label="PocketFlow transaction anatomy">
             <div className="visual-row">
               <span>Expense</span>
               <strong>{rupiah(128000)}</strong>
@@ -694,21 +696,6 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
               <span>Budget</span>
               <strong>Food monthly</strong>
             </div>
-          </div>
-        </section>
-
-        <section className="stats-section">
-          <div>
-            <strong>6</strong>
-            <span>Core screens</span>
-          </div>
-          <div>
-            <strong>4</strong>
-            <span>Report periods</span>
-          </div>
-          <div>
-            <strong>1</strong>
-            <span>Synced account</span>
           </div>
         </section>
 
@@ -737,14 +724,14 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
       />
 
       <section className="workspace">
-        <header className="dashboard-hero">
+        <header className="command-header">
           <div>
-            <span className="section-kicker">Personal finance command center</span>
-            <h1>{activeView === "overview" ? "Command your daily cashflow" : currentViewTitle}</h1>
+            <span className="workspace-label">{activeView === "overview" ? "Dashboard" : "Workspace"}</span>
+            <h1>{activeView === "overview" ? "Overview" : currentViewTitle}</h1>
             <p>
               {activeView === "overview"
-                ? "Review balances, budgets, wallet pressure, and recent movement in one focused surface."
-                : "Keep this workspace synced with the same Supabase account you use on mobile."}
+                ? "Balances, spending, and recent activity in one clean workspace."
+                : "Synced with the same account you use on mobile."}
             </p>
           </div>
           <div className="topbar-actions">
@@ -773,65 +760,44 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
 
         {loadingData ? (
           <section className="loading-panel">
-            <div className="spinner" />
-            <p>Memuat data terbaru...</p>
+            <div className="skeleton-stack dashboard-skeleton" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+            <p className="muted">Loading the latest data…</p>
           </section>
         ) : (
           <>
             {activeView === "overview" && (
               <div className="view-stack">
-                <section className="metric-grid">
-                  <MetricCard label="Total Balance" value={rupiah(totalBalance)} tone="neutral" />
-                  <MetricCard label="Income" value={rupiah(summary.totals.income)} tone="good" />
-                  <MetricCard label="Expense" value={rupiah(summary.totals.expense)} tone="bad" />
-                  <MetricCard label="Net Cashflow" value={rupiah(summary.totals.net)} tone={summary.totals.net >= 0 ? "good" : "bad"} />
+                <section className="overview-band">
+                  <article className="balance-panel">
+                    <span>Total Balance</span>
+                    <strong>{rupiah(totalBalance)}</strong>
+                    <p>
+                      {wallets.length ? `${wallets.length} active ${wallets.length === 1 ? "wallet" : "wallets"} tracked for the ${period} period.` : "Create your first wallet to start tracking balances."}
+                    </p>
+                  </article>
+                  <div className="metric-grid">
+                    <MetricCard label="Income" value={rupiah(summary.totals.income)} tone="good" />
+                    <MetricCard label="Expense" value={rupiah(summary.totals.expense)} tone="bad" />
+                    <MetricCard label="Net Cashflow" value={rupiah(summary.totals.net)} tone={summary.totals.net >= 0 ? "good" : "bad"} />
+                  </div>
                 </section>
 
                 <section className="dashboard-grid">
-                  <Panel title="Expense by Category" action={`${summary.byCategory.length} kategori`}>
-                    {summary.byCategory.length ? (
-                      <div className="chart-list">
-                        {summary.byCategory.map((item) => {
-                          const total = Number(item.total);
-                          return (
-                            <div className="chart-row" key={`${item.categoryName}-${item.categoryId}`}>
-                              <div className="chart-row-top">
-                                <span>{item.categoryName ?? "Uncategorized"}</span>
-                                <strong>{rupiah(total)}</strong>
-                              </div>
-                              <div className="progress-track">
-                                <span style={{ width: `${Math.max(4, (total / maxCategory) * 100)}%`, backgroundColor: item.color ?? "var(--color-accent)" }} />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <EmptyState title="Belum ada pengeluaran" description="Transaksi expense akan muncul di grafik ini." />
-                    )}
+                  <Panel title="Expense by Category" action={`${summary.byCategory.length} categories`}>
+                    <CategoryChart items={summary.byCategory} maxCategory={maxCategory} />
                   </Panel>
 
-                  <Panel title="Wallets" action={`${wallets.length} dompet`}>
-                    {wallets.length ? (
-                      <div className="wallet-list">
-                        {wallets.slice(0, 5).map((wallet) => (
-                          <div className="wallet-row" key={wallet.id}>
-                            <span className="wallet-dot" style={{ backgroundColor: wallet.color }} />
-                            <div>
-                              <strong>{wallet.name}</strong>
-                              <span>{wallet.type}</span>
-                            </div>
-                            <b>{rupiah(wallet.balance)}</b>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <EmptyState title="Belum ada wallet" description="Buat wallet pertama untuk mulai tracking." />
-                    )}
+                  <Panel title="Wallets" action={`${wallets.length} wallets`}>
+                    <WalletList wallets={wallets.slice(0, 5)} />
                   </Panel>
                 </section>
 
-                <Panel title="Recent Transactions" action={`${transactions.length} item`}>
+                <Panel title="Recent Transactions" action={`${transactions.length} items`} className="table-panel">
                   <TransactionTable
                     transactions={transactions.slice(0, 8)}
                     walletById={walletById}
@@ -867,7 +833,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                     <label>
                       Wallet
                       <select value={transactionForm.walletId} onChange={(event) => setTransactionForm((current) => ({ ...current, walletId: event.target.value }))} required>
-                        <option value="">Pilih wallet</option>
+                        <option value="">Select wallet</option>
                         {wallets.map((wallet) => (
                           <option key={wallet.id} value={wallet.id}>
                             {wallet.name}
@@ -883,7 +849,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                           onChange={(event) => setTransactionForm((current) => ({ ...current, targetWalletId: event.target.value }))}
                           required
                         >
-                          <option value="">Pilih tujuan</option>
+                          <option value="">Select destination</option>
                           {wallets
                             .filter((wallet) => wallet.id !== transactionForm.walletId)
                             .map((wallet) => (
@@ -901,7 +867,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                           onChange={(event) => setTransactionForm((current) => ({ ...current, categoryId: event.target.value }))}
                           required
                         >
-                          <option value="">Pilih kategori</option>
+                          <option value="">Select category</option>
                           {categories
                             .filter((category) => category.kind === transactionForm.type)
                             .map((category) => (
@@ -936,7 +902,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                     </label>
                     <label>
                       Note
-                      <input value={transactionForm.note} onChange={(event) => setTransactionForm((current) => ({ ...current, note: event.target.value }))} placeholder="Makan siang" />
+                      <input value={transactionForm.note} onChange={(event) => setTransactionForm((current) => ({ ...current, note: event.target.value }))} placeholder="Lunch" />
                     </label>
                     <div className="form-actions">
                       {transactionForm.id ? (
@@ -951,7 +917,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                   </form>
                 </Panel>
 
-                <Panel title="Transactions" action={`${transactions.length} item`}>
+                <Panel title="Transactions" action={`${transactions.length} items`} className="table-panel">
                   <TransactionTable transactions={transactions} walletById={walletById} categoryById={categoryById} actionBusy={actionBusy} onEdit={startEditTransaction} onDelete={deleteTransaction} />
                 </Panel>
               </div>
@@ -975,10 +941,10 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                   </form>
                 </Panel>
 
-                <Panel title="Wallet List" action={`${wallets.length} dompet`}>
+                <Panel title="Wallet List" action={`${wallets.length} wallets`}>
                   <div className="card-list">
                     {wallets.map((wallet) => (
-                      <article className="entity-card" key={wallet.id}>
+                      <article className="entity-row" key={wallet.id}>
                         <span className="wallet-dot large" style={{ backgroundColor: wallet.color }} />
                         <div>
                           <strong>{wallet.name}</strong>
@@ -990,7 +956,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                         </button>
                       </article>
                     ))}
-                    {!wallets.length ? <EmptyState title="Belum ada wallet" description="Tambahkan wallet agar transaksi bisa dicatat." /> : null}
+                    {!wallets.length ? <EmptyState title="No wallets yet" description="Add a wallet so transactions can be recorded." /> : null}
                   </div>
                 </Panel>
               </div>
@@ -1002,7 +968,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                   <form className="data-form" onSubmit={handleBudgetSubmit}>
                     <label>
                       Budget name
-                      <input value={budgetName} onChange={(event) => setBudgetName(event.target.value)} placeholder="Makan bulanan" required />
+                      <input value={budgetName} onChange={(event) => setBudgetName(event.target.value)} placeholder="Monthly food" required />
                     </label>
                     <label>
                       Limit
@@ -1022,7 +988,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                   </form>
                 </Panel>
 
-                <Panel title="Budget List" action={`${budgets.length} budget`}>
+                <Panel title="Budget List" action={`${budgets.length} budgets`}>
                   <div className="card-list">
                     {budgets.map((budget) => {
                       const usage = budgetUsageById.get(budget.id);
@@ -1053,7 +1019,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                         </article>
                       );
                     })}
-                    {!budgets.length ? <EmptyState title="Belum ada budget" description="Buat budget untuk menjaga pengeluaran." /> : null}
+                    {!budgets.length ? <EmptyState title="No budgets yet" description="Create a budget to keep spending in check." /> : null}
                   </div>
                 </Panel>
               </div>
@@ -1062,23 +1028,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
             {activeView === "reports" && (
               <div className="view-stack dashboard-grid">
                 <Panel title="By Category" action={period}>
-                  {summary.byCategory.length ? (
-                    <div className="chart-list">
-                      {summary.byCategory.map((item) => (
-                        <div className="chart-row" key={`${item.categoryName}-${item.categoryId}`}>
-                          <div className="chart-row-top">
-                            <span>{item.categoryName ?? "Uncategorized"}</span>
-                            <strong>{rupiah(item.total)}</strong>
-                          </div>
-                          <div className="progress-track">
-                            <span style={{ width: `${Math.max(4, (Number(item.total) / maxCategory) * 100)}%`, backgroundColor: item.color ?? "var(--color-accent)" }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <EmptyState title="Belum ada kategori" description="Expense per kategori akan muncul di sini." />
-                  )}
+                  <CategoryChart items={summary.byCategory} maxCategory={maxCategory} />
                 </Panel>
 
                 <Panel title="By Wallet" action={period}>
@@ -1096,7 +1046,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                       ))}
                     </div>
                   ) : (
-                    <EmptyState title="Belum ada wallet report" description="Expense per wallet akan muncul setelah ada transaksi." />
+                    <EmptyState title="No wallet data yet" description="Spending per wallet appears once you add transactions." />
                   )}
                 </Panel>
               </div>
@@ -1108,7 +1058,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                   <div className="avatar">{session.user.email?.charAt(0).toUpperCase() ?? "U"}</div>
                   <div>
                     <strong>{session.user.email}</strong>
-                    <span>Session web ini memakai Supabase user yang sama dengan mobile.</span>
+                    <span>This web session uses the same account as your mobile app.</span>
                   </div>
                   <button className="danger-button" type="button" onClick={handleSignOut}>
                     Sign Out
@@ -1164,7 +1114,10 @@ function ProductNav({
         <nav className="nav-links app-tabs" aria-label="PocketFlow app navigation">
           {navigationItems.map(([key, label]) => (
             <button key={key} className={activeView === key ? "nav-tab active" : "nav-tab"} type="button" onClick={() => onNavigate?.(key)}>
-              {label}
+              <span aria-hidden="true">
+                <NavIcon view={key} />
+              </span>
+              <b>{label}</b>
             </button>
           ))}
         </nav>
@@ -1174,7 +1127,7 @@ function ProductNav({
         {mode === "app" ? <span className="nav-email">{email}</span> : null}
         <button className="theme-toggle" type="button" onClick={onToggleTheme} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>
           <span className="theme-toggle-dot" aria-hidden="true" />
-          <span>Theme: {theme === "light" ? "Light" : "Dark"}</span>
+          <span>{theme === "light" ? "Light" : "Dark"}</span>
         </button>
         {mode === "app" ? (
           <button className="ghost-button" type="button" onClick={onSignOut}>
@@ -1219,6 +1172,110 @@ function ProductFooter() {
   );
 }
 
+function LandingPreview() {
+  const previewTransactions = [
+    ["Lunch", "GoPay", "Food", "-Rp128.000"],
+    ["Client invoice", "BCA", "Income", "+Rp4.800.000"],
+    ["Coffee", "Cash", "Daily", "-Rp32.000"],
+  ];
+
+  return (
+    <div className="preview-shell">
+      <div className="preview-header">
+        <div>
+          <span>PocketFlow preview</span>
+          <strong>Monthly overview</strong>
+        </div>
+        <button className="secondary-button" type="button">
+          Sync
+        </button>
+      </div>
+      <div className="preview-metrics">
+        <div>
+          <span>Total Balance</span>
+          <strong>{rupiah(18450000)}</strong>
+        </div>
+        <div>
+          <span>Net</span>
+          <strong>{rupiah(1620000)}</strong>
+        </div>
+        <div>
+          <span>Expense</span>
+          <strong>{rupiah(3180000)}</strong>
+        </div>
+      </div>
+      <div className="preview-grid">
+        <div className="preview-chart" aria-hidden="true">
+          {[72, 48, 62, 35].map((height, index) => (
+            <span key={height} style={{ height: `${height + index * 2}%` }} />
+          ))}
+        </div>
+        <div className="preview-table">
+          {previewTransactions.map(([note, wallet, category, amount]) => (
+            <div key={note}>
+              <span>{note}</span>
+              <small>{wallet} / {category}</small>
+              <strong className={amount.startsWith("+") ? "good-text" : "bad-text"}>{amount}</strong>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NavIcon({ view }: { view: ViewKey }) {
+  const paths: Record<ViewKey, ReactNode> = {
+    overview: (
+      <>
+        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      </>
+    ),
+    transactions: (
+      <>
+        <path d="M7 7h13" />
+        <path d="m17 4 3 3-3 3" />
+        <path d="M17 17H4" />
+        <path d="m7 20-3-3 3-3" />
+      </>
+    ),
+    wallets: (
+      <>
+        <path d="M3 7a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <path d="M16 12h.01" />
+      </>
+    ),
+    budgets: (
+      <>
+        <path d="M3 3v18h18" />
+        <rect x="7" y="11" width="3" height="6" rx="1" />
+        <rect x="13" y="7" width="3" height="10" rx="1" />
+      </>
+    ),
+    reports: (
+      <>
+        <path d="M21 12a9 9 0 1 1-9-9v9z" />
+        <path d="M21 9a9 9 0 0 0-6-6v6z" />
+      </>
+    ),
+    profile: (
+      <>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
+      </>
+    ),
+  };
+
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {paths[view]}
+    </svg>
+  );
+}
+
 function viewTitle(view: ViewKey) {
   const map: Record<ViewKey, string> = {
     overview: "Overview",
@@ -1240,15 +1297,61 @@ function MetricCard({ label, value, tone }: { label: string; value: string; tone
   );
 }
 
-function Panel({ title, action, children }: { title: string; action?: string; children: React.ReactNode }) {
+function Panel({ title, action, children, className = "" }: { title: string; action?: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className="panel">
+    <section className={`panel ${className}`}>
       <div className="panel-header">
         <h2>{title}</h2>
         {action ? <span>{action}</span> : null}
       </div>
       {children}
     </section>
+  );
+}
+
+function CategoryChart({ items, maxCategory }: { items: Summary["byCategory"]; maxCategory: number }) {
+  if (!items.length) {
+    return <EmptyState title="No spending yet" description="Expense transactions will appear in this chart." />;
+  }
+
+  return (
+    <div className="chart-list">
+      {items.map((item) => {
+        const total = Number(item.total);
+        return (
+          <div className="chart-row" key={`${item.categoryName}-${item.categoryId}`}>
+            <div className="chart-row-top">
+              <span>{item.categoryName ?? "Uncategorized"}</span>
+              <strong>{rupiah(total)}</strong>
+            </div>
+            <div className="progress-track">
+              <span style={{ width: `${Math.max(4, (total / maxCategory) * 100)}%`, backgroundColor: item.color ?? "var(--color-accent)" }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function WalletList({ wallets }: { wallets: Wallet[] }) {
+  if (!wallets.length) {
+    return <EmptyState title="No wallets yet" description="Create your first wallet to start tracking." />;
+  }
+
+  return (
+    <div className="wallet-list">
+      {wallets.map((wallet) => (
+        <div className="wallet-row" key={wallet.id}>
+          <span className="wallet-dot" style={{ backgroundColor: wallet.color }} />
+          <div>
+            <strong>{wallet.name}</strong>
+            <span>{wallet.type}</span>
+          </div>
+          <b>{rupiah(wallet.balance)}</b>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -1277,7 +1380,7 @@ function TransactionTable({
   onDelete: (id: string) => void;
 }) {
   if (!transactions.length) {
-    return <EmptyState title="Belum ada transaksi" description="Tambah transaksi pertama dari form web atau mobile." />;
+    return <EmptyState title="No transactions yet" description="Add your first transaction from web or mobile." />;
   }
 
   return (
