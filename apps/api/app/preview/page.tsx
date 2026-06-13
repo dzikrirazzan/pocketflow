@@ -1,10 +1,14 @@
 "use client";
 
-// TEMPORARY visual-preview route — renders the authenticated dashboard layout with
-// mock data so the design can be screenshot-verified without a Supabase login.
-// This file is deleted before committing. It reuses the real CSS classes + chart.
+// Visual-preview route renders the authenticated dashboard layout with mock data
+// so the design can be screenshot-verified without a Supabase login.
 
-import CashFlowChart from "../cash-flow-chart";
+import dynamic from "next/dynamic";
+
+const CashFlowChart = dynamic(() => import("../cash-flow-chart"), {
+  ssr: false,
+  loading: () => <div className="chart-card-body chart-loading" aria-hidden="true" />,
+});
 
 const idr = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 
@@ -78,7 +82,7 @@ export default function PreviewPage() {
             <span className="theme-toggle-dot" />
             <span>Light</span>
           </button>
-          <button className="ghost-button" type="button">Sign Out</button>
+          <button className="ghost-button" type="button">Sign out</button>
         </div>
       </header>
 
@@ -97,7 +101,7 @@ export default function PreviewPage() {
               <button className="segmented" type="button">yearly</button>
             </div>
             <button className="secondary-button" type="button">Sync</button>
-            <button className="primary-button" type="button">+ Add Transaction</button>
+            <button className="primary-button" type="button">+ Add transaction</button>
           </div>
         </header>
 
@@ -111,12 +115,12 @@ export default function PreviewPage() {
             <article className="stat-card stat-income">
               <div className="stat-card-head"><span className="stat-dot" /><span className="stat-label">Income</span></div>
               <strong className="stat-value">{idr(8800000)}</strong>
-              <span className="stat-helper">This monthly</span>
+              <span className="stat-helper">This month</span>
             </article>
             <article className="stat-card stat-expense">
               <div className="stat-card-head"><span className="stat-dot" /><span className="stat-label">Expenses</span></div>
               <strong className="stat-value">{idr(4300000)}</strong>
-              <span className="stat-helper">This monthly</span>
+              <span className="stat-helper">This month</span>
             </article>
             <article className="stat-card stat-income">
               <div className="stat-card-head"><span className="stat-dot" /><span className="stat-label">Net Savings</span></div>
@@ -184,7 +188,7 @@ export default function PreviewPage() {
                       <td>
                         <div className="table-actions">
                           <button className="icon-button" type="button">Edit</button>
-                          <button className="icon-button danger" type="button">Del</button>
+                          <button className="icon-button danger" type="button">Delete</button>
                         </div>
                       </td>
                     </tr>
