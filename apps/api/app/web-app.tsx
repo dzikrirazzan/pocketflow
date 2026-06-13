@@ -1,7 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
+
+const CashFlowChart = dynamic(() => import("./cash-flow-chart"), {
+  ssr: false,
+  loading: () => <div className="chart-card-body chart-loading" aria-hidden="true" />,
+});
 
 type AppConfig = {
   supabaseUrl: string;
@@ -152,6 +158,39 @@ function shortDate(value: string) {
 function normalizeAmount(input: string) {
   const normalized = input.replace(/[^\d]/g, "");
   return normalized ? Number(normalized) : 0;
+}
+
+type CashFlowPoint = { label: string; income: number; expense: number; net: number };
+
+// Derives a monthly income/expense/net series from the already-loaded transactions.
+// No extra fetch and no backend change — swap the source here if a dedicated
+// time-series endpoint is added later.
+function buildCashFlowSeries(transactionList: Transaction[]): CashFlowPoint[] {
+  const buckets = new Map<string, { date: Date; income: number; expense: number }>();
+
+  for (const transaction of transactionList) {
+    if (transaction.type === "transfer") continue;
+    const when = new Date(transaction.happenedAt);
+    if (Number.isNaN(when.getTime())) continue;
+    const key = `${when.getFullYear()}-${String(when.getMonth() + 1).padStart(2, "0")}`;
+    let bucket = buckets.get(key);
+    if (!bucket) {
+      bucket = { date: new Date(when.getFullYear(), when.getMonth(), 1), income: 0, expense: 0 };
+      buckets.set(key, bucket);
+    }
+    const amount = Number(transaction.amount) || 0;
+    if (transaction.type === "income") bucket.income += amount;
+    else bucket.expense += amount;
+  }
+
+  return Array.from(buckets.values())
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .map((bucket) => ({
+      label: bucket.date.toLocaleDateString("en-US", { month: "short" }),
+      income: Math.round(bucket.income),
+      expense: Math.round(bucket.expense),
+      net: Math.round(bucket.income - bucket.expense),
+    }));
 }
 
 function getInitialTheme(): ThemeMode {
@@ -351,6 +390,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
   const totalBalance = wallets.reduce((sum, wallet) => sum + Number(wallet.balance), 0);
   const maxCategory = Math.max(1, ...summary.byCategory.map((item) => Number(item.total)));
   const budgetUsageById = useMemo(() => new Map(summary.budgetUsage.map((item) => [item.budgetId, item])), [summary]);
+  const cashFlowSeries = useMemo(() => buildCashFlowSeries(transactions), [transactions]);
   const currentViewTitle = viewTitle(activeView);
 
   async function handleAuthSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -726,11 +766,11 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
       <section className="workspace">
         <header className="command-header">
           <div>
-            <span className="workspace-label">{activeView === "overview" ? "Dashboard" : "Workspace"}</span>
-            <h1>{activeView === "overview" ? "Overview" : currentViewTitle}</h1>
+            <span className="workspace-label">{activeView === "overview" ? "Welcome back" : "Workspace"}</span>
+            <h1>{activeView === "overview" ? "Dashboard" : currentViewTitle}</h1>
             <p>
               {activeView === "overview"
-                ? "Balances, spending, and recent activity in one clean workspace."
+                ? "Track your income, expenses, and balance."
                 : "Synced with the same account you use on mobile."}
             </p>
           </div>
@@ -745,6 +785,18 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
             <button className="secondary-button" type="button" onClick={() => loadData(period, true)} disabled={refreshing || loadingData}>
               {refreshing ? "Syncing..." : "Sync"}
             </button>
+            {activeView === "overview" || activeView === "transactions" ? (
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => {
+                  setTransactionForm(defaultTransactionForm());
+                  setActiveView("transactions");
+                }}
+              >
+                + Add Transaction
+              </button>
+            ) : null}
           </div>
         </header>
 
@@ -772,20 +824,30 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
           <>
             {activeView === "overview" && (
               <div className="view-stack">
-                <section className="overview-band">
-                  <article className="balance-panel">
-                    <span>Total Balance</span>
-                    <strong>{rupiah(totalBalance)}</strong>
-                    <p>
-                      {wallets.length ? `${wallets.length} active ${wallets.length === 1 ? "wallet" : "wallets"} tracked for the ${period} period.` : "Create your first wallet to start tracking balances."}
-                    </p>
-                  </article>
-                  <div className="metric-grid">
-                    <MetricCard label="Income" value={rupiah(summary.totals.income)} tone="good" />
-                    <MetricCard label="Expense" value={rupiah(summary.totals.expense)} tone="bad" />
-                    <MetricCard label="Net Cashflow" value={rupiah(summary.totals.net)} tone={summary.totals.net >= 0 ? "good" : "bad"} />
-                  </div>
+                <section className="stat-grid">
+                  <StatCard
+                    label="Total Balance"
+                    value={rupiah(totalBalance)}
+                    helper={wallets.length ? `${wallets.length} active ${wallets.length === 1 ? "wallet" : "wallets"}` : "No wallets yet"}
+                    tone="brand"
+                  />
+                  <StatCard label="Income" value={rupiah(summary.totals.income)} helper={`This ${period}`} tone="income" />
+                  <StatCard label="Expenses" value={rupiah(summary.totals.expense)} helper={`This ${period}`} tone="expense" />
+                  <StatCard
+                    label="Net Savings"
+                    value={rupiah(summary.totals.net)}
+                    helper="Income − expenses"
+                    tone={summary.totals.net >= 0 ? "income" : "expense"}
+                  />
                 </section>
+
+                <ChartCard title="Cash Flow Overview" subtitle="Income, expenses, and balance trend over time.">
+                  {cashFlowSeries.length ? (
+                    <CashFlowChart data={cashFlowSeries} />
+                  ) : (
+                    <EmptyState title="No cash flow yet" description="Add income and expense transactions to see your trend." />
+                  )}
+                </ChartCard>
 
                 <section className="dashboard-grid">
                   <Panel title="Expense by Category" action={`${summary.byCategory.length} categories`}>
@@ -1288,12 +1350,44 @@ function viewTitle(view: ViewKey) {
   return map[view];
 }
 
-function MetricCard({ label, value, tone }: { label: string; value: string; tone: "neutral" | "good" | "bad" }) {
+function StatCard({ label, value, helper, tone }: { label: string; value: string; helper?: string; tone: "brand" | "income" | "expense" }) {
   return (
-    <article className={`metric-card ${tone}`}>
-      <span>{label}</span>
-      <strong>{value}</strong>
+    <article className={`stat-card stat-${tone}`}>
+      <div className="stat-card-head">
+        <span className="stat-dot" aria-hidden="true" />
+        <span className="stat-label">{label}</span>
+      </div>
+      <strong className="stat-value">{value}</strong>
+      {helper ? <span className="stat-helper">{helper}</span> : null}
     </article>
+  );
+}
+
+const cashFlowSeriesKeys = [
+  { key: "income", label: "Income", color: "#16a34a" },
+  { key: "expense", label: "Expenses", color: "#dc2626" },
+  { key: "net", label: "Net", color: "#2563eb" },
+] as const;
+
+function ChartCard({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
+  return (
+    <section className="panel chart-card">
+      <div className="chart-card-header">
+        <div className="chart-card-heading">
+          <h2>{title}</h2>
+          {subtitle ? <p>{subtitle}</p> : null}
+        </div>
+        <div className="chart-legend">
+          {cashFlowSeriesKeys.map((entry) => (
+            <span className="chart-legend-item" key={entry.key}>
+              <span className="chart-legend-dot" style={{ background: entry.color }} />
+              {entry.label}
+            </span>
+          ))}
+        </div>
+      </div>
+      {children}
+    </section>
   );
 }
 
@@ -1409,7 +1503,23 @@ function TransactionTable({
                   </div>
                 </td>
                 <td>{wallet?.name ?? "-"}</td>
-                <td>{transaction.type === "transfer" ? "Transfer" : category?.name ?? "-"}</td>
+                <td>
+                  {transaction.type === "transfer" ? (
+                    <span className="badge badge-neutral">Transfer</span>
+                  ) : category ? (
+                    <span
+                      className="badge"
+                      style={{
+                        backgroundColor: `color-mix(in srgb, ${category.color} 14%, var(--color-bg-surface))`,
+                        color: category.color,
+                      }}
+                    >
+                      {category.name}
+                    </span>
+                  ) : (
+                    <span className="badge badge-neutral">Uncategorized</span>
+                  )}
+                </td>
                 <td>
                   <b className={isIncome ? "amount good-text" : "amount bad-text"}>
                     {isIncome ? "+" : "-"}
