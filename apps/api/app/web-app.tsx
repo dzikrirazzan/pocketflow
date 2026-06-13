@@ -167,6 +167,15 @@ function normalizeAmount(input: string) {
 
 type CashFlowPoint = { label: string; income: number; expense: number; net: number };
 
+const cashFlowPreviewSeries: CashFlowPoint[] = [
+  { label: "Jan", income: 7200000, expense: 4100000, net: 3100000 },
+  { label: "Feb", income: 6800000, expense: 4600000, net: 2200000 },
+  { label: "Mar", income: 9100000, expense: 5200000, net: 3900000 },
+  { label: "Apr", income: 8200000, expense: 3800000, net: 4400000 },
+  { label: "May", income: 9600000, expense: 5400000, net: 4200000 },
+  { label: "Jun", income: 8800000, expense: 4300000, net: 4500000 },
+];
+
 // Derives a monthly income/expense/net series from the already-loaded transactions.
 // No extra fetch and no backend change — swap the source here if a dedicated
 // time-series endpoint is added later.
@@ -397,7 +406,9 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
   const maxCategory = Math.max(1, ...summary.byCategory.map((item) => Number(item.total)));
   const budgetUsageById = useMemo(() => new Map(summary.budgetUsage.map((item) => [item.budgetId, item])), [summary]);
   const cashFlowSeries = useMemo(() => buildCashFlowSeries(transactions), [transactions]);
+  const cashFlowIsPreview = cashFlowSeries.length === 0;
   const currentViewTitle = viewTitle(activeView);
+  const currentPeriodPhrase = periodPhrase(period);
 
   async function handleAuthSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -811,7 +822,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                   setActiveView("transactions");
                 }}
               >
-                + Add Transaction
+                + Add transaction
               </button>
             ) : null}
           </div>
@@ -848,8 +859,8 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                     helper={wallets.length ? `${wallets.length} active ${wallets.length === 1 ? "wallet" : "wallets"}` : "No wallets yet"}
                     tone="brand"
                   />
-                  <StatCard label="Income" value={rupiah(summary.totals.income)} helper={`This ${period}`} tone="income" />
-                  <StatCard label="Expenses" value={rupiah(summary.totals.expense)} helper={`This ${period}`} tone="expense" />
+                  <StatCard label="Income" value={rupiah(summary.totals.income)} helper={currentPeriodPhrase} tone="income" />
+                  <StatCard label="Expenses" value={rupiah(summary.totals.expense)} helper={currentPeriodPhrase} tone="expense" />
                   <StatCard
                     label="Net Savings"
                     value={rupiah(summary.totals.net)}
@@ -859,11 +870,15 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                 </section>
 
                 <ChartCard title="Cash Flow Overview" subtitle="Income, expenses, and balance trend over time.">
-                  {cashFlowSeries.length ? (
-                    <CashFlowChart data={cashFlowSeries} />
-                  ) : (
-                    <EmptyState title="No cash flow yet" description="Add income and expense transactions to see your trend." />
-                  )}
+                  <div className="chart-preview-stack">
+                    <CashFlowChart data={cashFlowIsPreview ? cashFlowPreviewSeries : cashFlowSeries} />
+                    {cashFlowIsPreview ? (
+                      <div className="chart-preview-note">
+                        <strong>Preview data</strong>
+                        <span>Add income and expense transactions to replace this with your cash flow.</span>
+                      </div>
+                    ) : null}
+                  </div>
                 </ChartCard>
 
                 <section className="dashboard-grid">
@@ -891,7 +906,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
 
             {activeView === "transactions" && (
               <div className="view-stack two-column">
-                <Panel title={transactionForm.id ? "Edit Transaction" : "Add Transaction"} action={transactionForm.type}>
+                <Panel title={transactionForm.id ? "Edit transaction" : "Add transaction"} action={transactionForm.type}>
                   <form className="data-form" onSubmit={handleTransactionSubmit}>
                     <div className="segmented-row">
                       {(["expense", "income", "transfer"] as TransactionForm["type"][]).map((item) => (
@@ -990,7 +1005,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                         </button>
                       ) : null}
                       <button className="primary-button" disabled={actionBusy === "transaction"} type="submit">
-                        {actionBusy === "transaction" ? "Saving..." : transactionForm.id ? "Save Changes" : "Save Transaction"}
+                        {actionBusy === "transaction" ? "Saving..." : transactionForm.id ? "Save changes" : "Save transaction"}
                       </button>
                     </div>
                   </form>
@@ -1004,7 +1019,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
 
             {activeView === "wallets" && (
               <div className="view-stack two-column">
-                <Panel title="Add Wallet" action="IDR">
+                <Panel title="Add wallet" action="IDR">
                   <form className="data-form" onSubmit={handleWalletSubmit}>
                     <label>
                       Wallet name
@@ -1015,12 +1030,12 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                       <input value={walletBalance} onChange={(event) => setWalletBalance(event.target.value)} inputMode="numeric" placeholder="500000" />
                     </label>
                     <button className="primary-button" disabled={actionBusy === "wallet"} type="submit">
-                      {actionBusy === "wallet" ? "Saving..." : "Add Wallet"}
+                      {actionBusy === "wallet" ? "Saving..." : "Add wallet"}
                     </button>
                   </form>
                 </Panel>
 
-                <Panel title="Wallet List" action={`${wallets.length} wallets`}>
+                <Panel title="Wallet list" action={`${wallets.length} wallets`}>
                   <div className="card-list">
                     {wallets.map((wallet) => (
                       <article className="entity-row" key={wallet.id}>
@@ -1043,7 +1058,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
 
             {activeView === "budgets" && (
               <div className="view-stack two-column">
-                <Panel title="Add Budget" action={budgetPeriod}>
+                <Panel title="Add budget" action={budgetPeriod}>
                   <form className="data-form" onSubmit={handleBudgetSubmit}>
                     <label>
                       Budget name
@@ -1062,12 +1077,12 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                       </select>
                     </label>
                     <button className="primary-button" disabled={actionBusy === "budget"} type="submit">
-                      {actionBusy === "budget" ? "Saving..." : "Add Budget"}
+                      {actionBusy === "budget" ? "Saving..." : "Add budget"}
                     </button>
                   </form>
                 </Panel>
 
-                <Panel title="Budget List" action={`${budgets.length} budgets`}>
+                <Panel title="Budget list" action={`${budgets.length} budgets`}>
                   <div className="card-list">
                     {budgets.map((budget) => {
                       const usage = budgetUsageById.get(budget.id);
@@ -1140,7 +1155,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                     <span>This web session uses the same account as your mobile app.</span>
                   </div>
                   <button className="danger-button" type="button" onClick={handleSignOut}>
-                    Sign Out
+                    Sign out
                   </button>
                 </div>
               </Panel>
@@ -1210,7 +1225,7 @@ function ProductNav({
         </button>
         {mode === "app" ? (
           <button className="ghost-button" type="button" onClick={onSignOut}>
-            Sign Out
+            Sign out
           </button>
         ) : (
           <a className="primary-button nav-cta" href="#auth-panel">
@@ -1462,6 +1477,16 @@ function viewTitle(view: ViewKey) {
   return map[view];
 }
 
+function periodPhrase(period: Period) {
+  const map: Record<Period, string> = {
+    daily: "Today",
+    weekly: "This week",
+    monthly: "This month",
+    yearly: "This year",
+  };
+  return map[period];
+}
+
 function StatCard({ label, value, helper, tone }: { label: string; value: string; helper?: string; tone: "brand" | "income" | "expense" }) {
   return (
     <article className={`stat-card stat-${tone}`}>
@@ -1604,8 +1629,11 @@ function TransactionTable({
         <tbody>
           {transactions.map((transaction) => {
             const isIncome = transaction.type === "income";
+            const isExpense = transaction.type === "expense";
             const wallet = walletById.get(transaction.walletId);
             const category = transaction.categoryId ? categoryById.get(transaction.categoryId) : null;
+            const amountPrefix = isIncome ? "+" : isExpense ? "-" : "";
+            const amountClass = isIncome ? "good-text" : isExpense ? "bad-text" : "neutral-text";
             return (
               <tr key={transaction.id}>
                 <td>
@@ -1633,10 +1661,7 @@ function TransactionTable({
                   )}
                 </td>
                 <td>
-                  <b className={isIncome ? "amount good-text" : "amount bad-text"}>
-                    {isIncome ? "+" : "-"}
-                    {rupiah(transaction.amount)}
-                  </b>
+                  <b className={`amount ${amountClass}`}>{`${amountPrefix}${rupiah(transaction.amount)}`}</b>
                 </td>
                 <td>
                   <div className="table-actions">
@@ -1644,7 +1669,7 @@ function TransactionTable({
                       Edit
                     </button>
                     <button className="icon-button danger" disabled={actionBusy === `delete-tx-${transaction.id}`} type="button" onClick={() => onDelete(transaction.id)} aria-label="Delete transaction">
-                      {actionBusy === `delete-tx-${transaction.id}` ? "..." : "Del"}
+                      {actionBusy === `delete-tx-${transaction.id}` ? "..." : "Delete"}
                     </button>
                   </div>
                 </td>
