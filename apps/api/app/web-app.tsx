@@ -59,6 +59,7 @@ type Summary = {
 
 type Period = "daily" | "weekly" | "monthly" | "yearly";
 type ViewKey = "overview" | "transactions" | "wallets" | "budgets" | "reports" | "profile";
+type ThemeMode = "light" | "dark";
 
 type TransactionForm = {
   id?: string;
@@ -138,6 +139,15 @@ function normalizeAmount(input: string) {
   return normalized ? Number(normalized) : 0;
 }
 
+function getInitialTheme(): ThemeMode {
+  if (typeof window === "undefined") return "light";
+
+  const storedTheme = window.localStorage.getItem("pocketflow-theme");
+  if (storedTheme === "dark" || storedTheme === "light") return storedTheme;
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
 export function PocketFlowWebApp({ config }: { config: AppConfig }) {
   const supabase = useMemo<SupabaseClient | null>(() => {
     if (!config.isConfigured) return null;
@@ -168,6 +178,8 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [actionBusy, setActionBusy] = useState("");
+  const [theme, setTheme] = useState<ThemeMode>("light");
+  const [themeReady, setThemeReady] = useState(false);
 
   const [transactionForm, setTransactionForm] = useState<TransactionForm>(() => defaultTransactionForm());
   const [walletName, setWalletName] = useState("");
@@ -175,6 +187,25 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
   const [budgetName, setBudgetName] = useState("");
   const [budgetAmount, setBudgetAmount] = useState("");
   const [budgetPeriod, setBudgetPeriod] = useState<"daily" | "weekly" | "monthly">("monthly");
+
+  useEffect(() => {
+    const initialTheme = getInitialTheme();
+    setTheme(initialTheme);
+    setThemeReady(true);
+    document.documentElement.dataset.theme = initialTheme;
+    document.documentElement.style.colorScheme = initialTheme;
+  }, []);
+
+  useEffect(() => {
+    if (!themeReady) return;
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    window.localStorage.setItem("pocketflow-theme", theme);
+  }, [theme, themeReady]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((current) => (current === "light" ? "dark" : "light"));
+  }, []);
 
   useEffect(() => {
     if (!supabase) {
@@ -520,7 +551,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
   if (!config.isConfigured) {
     return (
       <main className="site-shell">
-        <ProductNav mode="marketing" />
+        <ProductNav mode="marketing" theme={theme} onToggleTheme={toggleTheme} />
         <section className="auth-state-section">
           <div className="auth-card system-card">
             <div className="brand-lockup">
@@ -542,7 +573,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
   if (authLoading) {
     return (
       <main className="site-shell">
-        <ProductNav mode="marketing" />
+        <ProductNav mode="marketing" theme={theme} onToggleTheme={toggleTheme} />
         <section className="auth-state-section">
           <div className="auth-card compact-card system-card">
             <div className="skeleton-stack" aria-hidden="true">
@@ -560,7 +591,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
   if (!session) {
     return (
       <main className="site-shell">
-        <ProductNav mode="marketing" />
+        <ProductNav mode="marketing" theme={theme} onToggleTheme={toggleTheme} />
         <section className="landing-hero" id="top">
           <div className="hero-copy animate-in">
             <h1>
@@ -701,6 +732,8 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
         mode="app"
         onNavigate={setActiveView}
         onSignOut={handleSignOut}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       <section className="workspace">
@@ -995,7 +1028,8 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                       const usage = budgetUsageById.get(budget.id);
                       const used = Number(usage?.used ?? 0);
                       const limit = Number(budget.amount);
-                      const pct = limit ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+                      const rawPct = limit ? Math.round((used / limit) * 100) : 0;
+                      const barPct = Math.min(100, rawPct);
                       return (
                         <article className="budget-card" key={budget.id}>
                           <div className="budget-heading">
@@ -1003,10 +1037,10 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
                               <strong>{budget.name}</strong>
                               <span>{budget.period}</span>
                             </div>
-                            <b>{pct}%</b>
+                            <b>{rawPct}%</b>
                           </div>
                           <div className="progress-track">
-                            <span className={pct > 100 ? "bad-fill" : pct > 80 ? "warn-fill" : ""} style={{ width: `${Math.max(3, pct)}%` }} />
+                            <span className={rawPct > 100 ? "bad-fill" : rawPct > 80 ? "warn-fill" : ""} style={{ width: `${Math.max(3, barPct)}%` }} />
                           </div>
                           <div className="budget-footer">
                             <span>
@@ -1095,12 +1129,16 @@ function ProductNav({
   mode,
   onNavigate,
   onSignOut,
+  theme,
+  onToggleTheme,
 }: {
   activeView?: ViewKey;
   email?: string;
   mode: "marketing" | "app";
   onNavigate?: (view: ViewKey) => void;
   onSignOut?: () => void;
+  theme: ThemeMode;
+  onToggleTheme: () => void;
 }) {
   return (
     <header className={`product-nav ${mode === "app" ? "app-nav" : "marketing-nav"}`}>
@@ -1134,6 +1172,10 @@ function ProductNav({
 
       <div className="nav-actions">
         {mode === "app" ? <span className="nav-email">{email}</span> : null}
+        <button className="theme-toggle" type="button" onClick={onToggleTheme} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>
+          <span className="theme-toggle-dot" aria-hidden="true" />
+          <span>Theme: {theme === "light" ? "Light" : "Dark"}</span>
+        </button>
         {mode === "app" ? (
           <button className="ghost-button" type="button" onClick={onSignOut}>
             Sign Out
