@@ -3,6 +3,7 @@
 // Visual-preview route renders the authenticated dashboard layout with mock data
 // so the design can be screenshot-verified without a Supabase login.
 
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 
 const CashFlowChart = dynamic(() => import("../cash-flow-chart"), {
@@ -31,23 +32,23 @@ const tabs: Array<[string, string]> = [
 ];
 
 const wallets = [
-  { name: "BCA", type: "bank", balance: 12400000, color: "#2563eb" },
-  { name: "GoPay", type: "e-wallet", balance: 1850000, color: "#16a34a" },
-  { name: "Cash", type: "cash", balance: 640000, color: "#f59e0b" },
+  { name: "BCA", type: "bank", balance: 12400000, color: "#f76f53" },
+  { name: "GoPay", type: "e-wallet", balance: 1850000, color: "#54a45a" },
+  { name: "Cash", type: "cash", balance: 640000, color: "#d89a38" },
 ];
 
 const categories = [
-  { name: "Food & Drink", total: 2150000, pct: 100, color: "#dc2626" },
-  { name: "Transport", total: 1240000, pct: 58, color: "#f59e0b" },
-  { name: "Shopping", total: 920000, pct: 43, color: "#7c3aed" },
-  { name: "Bills", total: 680000, pct: 32, color: "#2563eb" },
+  { name: "Food & Drink", total: 2150000, pct: 100, color: "#d65a4a" },
+  { name: "Transport", total: 1240000, pct: 58, color: "#d89a38" },
+  { name: "Shopping", total: 920000, pct: 43, color: "#f76f53" },
+  { name: "Bills", total: 680000, pct: 32, color: "#54a45a" },
 ];
 
 const txns = [
-  { note: "Client invoice", date: "12 Jun, 09:24", wallet: "BCA", cat: "Income", color: "#16a34a", amount: "+Rp4.800.000", positive: true },
-  { note: "Groceries", date: "11 Jun, 18:02", wallet: "GoPay", cat: "Food & Drink", color: "#dc2626", amount: "-Rp412.000", positive: false },
-  { note: "Grab to office", date: "11 Jun, 08:15", wallet: "GoPay", cat: "Transport", color: "#f59e0b", amount: "-Rp38.000", positive: false },
-  { note: "Coffee", date: "10 Jun, 15:40", wallet: "Cash", cat: "Food & Drink", color: "#dc2626", amount: "-Rp32.000", positive: false },
+  { note: "Client invoice", date: "12 Jun, 09:24", wallet: "BCA", cat: "Income", color: "#54a45a", amount: "+Rp4.800.000", positive: true },
+  { note: "Groceries", date: "11 Jun, 18:02", wallet: "GoPay", cat: "Food & Drink", color: "#d65a4a", amount: "-Rp412.000", positive: false },
+  { note: "Grab to office", date: "11 Jun, 08:15", wallet: "GoPay", cat: "Transport", color: "#d89a38", amount: "-Rp38.000", positive: false },
+  { note: "Coffee", date: "10 Jun, 15:40", wallet: "Cash", cat: "Food & Drink", color: "#d65a4a", amount: "-Rp32.000", positive: false },
 ];
 
 function Icon({ d }: { d: string }) {
@@ -59,6 +60,13 @@ function Icon({ d }: { d: string }) {
 }
 
 export default function PreviewPage() {
+  const theme = typeof window === "undefined" ? "dark" : new URLSearchParams(window.location.search).get("theme") === "light" ? "light" : "dark";
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  }, [theme]);
+
   return (
     <main className="app-shell">
       <header className="product-nav app-nav">
@@ -136,12 +144,12 @@ export default function PreviewPage() {
                 <p>Income, expenses, and balance trend over time.</p>
               </div>
               <div className="chart-legend">
-                <span className="chart-legend-item"><span className="chart-legend-dot" style={{ background: "#16a34a" }} />Income</span>
-                <span className="chart-legend-item"><span className="chart-legend-dot" style={{ background: "#dc2626" }} />Expenses</span>
-                <span className="chart-legend-item"><span className="chart-legend-dot" style={{ background: "#2563eb" }} />Net</span>
+                <span className="chart-legend-item"><span className="chart-legend-dot" style={{ background: "#54a45a" }} />Income</span>
+                <span className="chart-legend-item"><span className="chart-legend-dot" style={{ background: "#d65a4a" }} />Expenses</span>
+                <span className="chart-legend-item"><span className="chart-legend-dot" style={{ background: "#f76f53" }} />Net</span>
               </div>
             </div>
-            <CashFlowChart data={series} />
+            <CashFlowChart data={series} theme={theme} />
           </section>
 
           <section className="dashboard-grid">
