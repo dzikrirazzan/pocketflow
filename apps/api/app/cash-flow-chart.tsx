@@ -59,9 +59,9 @@ export default function CashFlowChart({ data, theme = "dark" }: { data: CashFlow
           <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={10} tick={{ fill: axis, fontSize: 12 }} />
           <YAxis tickLine={false} axisLine={false} width={52} tick={{ fill: axis, fontSize: 12 }} tickFormatter={(value: number) => compactNumber(value)} />
           <Tooltip content={<CashFlowTooltip />} cursor={{ fill: cursor }} />
-          <Bar dataKey="income" name="Income" fill={chartColors.income} radius={[4, 4, 0, 0]} maxBarSize={26} />
-          <Bar dataKey="expense" name="Expenses" fill={chartColors.expense} radius={[4, 4, 0, 0]} maxBarSize={26} />
-          <Line dataKey="net" name="Net" type="monotone" stroke={chartColors.net} strokeWidth={2.5} dot={{ r: 3, fill: chartColors.net, strokeWidth: 0 }} activeDot={{ r: 5 }} />
+          <Bar dataKey="income" name="Income" fill={chartColors.income} radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
+          <Bar dataKey="expense" name="Expenses" fill={chartColors.expense} radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
+          <Line dataKey="net" name="Net" type="monotone" stroke={chartColors.net} strokeWidth={2.5} dot={{ r: 3, fill: chartColors.net, strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>
