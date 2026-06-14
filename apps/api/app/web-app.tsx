@@ -213,8 +213,8 @@ function getInitialTheme(): ThemeMode {
   const storedTheme = window.localStorage.getItem("pocketflow-theme");
   if (storedTheme === "dark" || storedTheme === "light") return storedTheme;
 
-  // Default to the polished light theme on first visit; the toggle still persists a choice.
-  return "light";
+  // Default to the calm dark editorial theme on first visit; the toggle still persists a choice.
+  return "dark";
 }
 
 export function PocketFlowWebApp({ config }: { config: AppConfig }) {
@@ -669,12 +669,14 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
           <div className="hero-copy animate-in">
             <span className="eyebrow">
               <span className="eyebrow-dot" aria-hidden="true" />
-              Personal finance, in sync
+              Personal finance, but calmer
             </span>
-            <h1>Your money, finally in order.</h1>
+            <h1>
+              Welcome to <span className="accent-italic">calmer</span> money.
+            </h1>
             <p>
-              PocketFlow keeps your wallets, budgets, and transactions in one calm dashboard — synced across web and iPhone with a single
-              account.
+              PocketFlow keeps your wallets, budgets, and spending in one quiet place — beautifully organized and synced across web and
+              iPhone.
             </p>
             <div className="hero-actions">
               <a className="primary-button lg" href="#auth-panel">
@@ -871,7 +873,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
 
                 <ChartCard title="Cash Flow Overview" subtitle="Income, expenses, and balance trend over time.">
                   <div className="chart-preview-stack">
-                    <CashFlowChart data={cashFlowIsPreview ? cashFlowPreviewSeries : cashFlowSeries} />
+                    <CashFlowChart data={cashFlowIsPreview ? cashFlowPreviewSeries : cashFlowSeries} theme={theme} />
                     {cashFlowIsPreview ? (
                       <div className="chart-preview-note">
                         <strong>Preview data</strong>
@@ -1350,7 +1352,7 @@ function LandingPreview() {
               ))}
             </div>
             <svg className="preview-line" viewBox="0 0 100 80" preserveAspectRatio="none">
-              <polyline points={linePoints} fill="none" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              <polyline points={linePoints} fill="none" stroke="#f76f53" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
         </div>
@@ -1501,9 +1503,9 @@ function StatCard({ label, value, helper, tone }: { label: string; value: string
 }
 
 const cashFlowSeriesKeys = [
-  { key: "income", label: "Income", color: "#16a34a" },
-  { key: "expense", label: "Expenses", color: "#dc2626" },
-  { key: "net", label: "Net", color: "#2563eb" },
+  { key: "income", label: "Income", color: "#54a45a" },
+  { key: "expense", label: "Expenses", color: "#d65a4a" },
+  { key: "net", label: "Net", color: "#f76f53" },
 ] as const;
 
 function ChartCard({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
