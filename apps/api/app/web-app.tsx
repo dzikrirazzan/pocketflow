@@ -766,7 +766,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
           </div>
         </section>
 
-        <section className="cta-banner">
+        <section className="cta-banner"><div className="cta-glow" aria-hidden="true" />
           <div>
             <h2>Start from your next transaction.</h2>
             <p>Free to use. Your web and mobile stay perfectly in sync.</p>
@@ -853,7 +853,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
         ) : (
           <>
             {activeView === "overview" && (
-              <div className="view-stack">
+              <div className="view-stack animate-enter">
                 <section className="stat-grid">
                   <StatCard
                     label="Total Balance"
@@ -907,7 +907,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
             )}
 
             {activeView === "transactions" && (
-              <div className="view-stack two-column">
+              <div className="view-stack two-column animate-enter">
                 <Panel title={transactionForm.id ? "Edit transaction" : "Add transaction"} action={transactionForm.type}>
                   <form className="data-form" onSubmit={handleTransactionSubmit}>
                     <div className="segmented-row">
@@ -1122,7 +1122,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
             )}
 
             {activeView === "reports" && (
-              <div className="view-stack dashboard-grid">
+              <div className="view-stack dashboard-grid animate-enter">
                 <Panel title="By Category" action={period}>
                   <CategoryChart items={summary.byCategory} maxCategory={maxCategory} />
                 </Panel>
@@ -1247,7 +1247,7 @@ function ProductFooter() {
           <span className="brand-mark">PF</span>
           <span>PocketFlow</span>
         </a>
-        <p>Finance tracking for the moments you actually spend money.</p>
+        <p>Finance tracking for the moments you actually spend money.</p><small className="footer-copy">© {new Date().getFullYear()} PocketFlow</small>
       </div>
       <div>
         <strong>Product</strong>
@@ -1492,6 +1492,7 @@ function periodPhrase(period: Period) {
 function StatCard({ label, value, helper, tone }: { label: string; value: string; helper?: string; tone: "brand" | "income" | "expense" }) {
   return (
     <article className={`stat-card stat-${tone}`}>
+      <div className="stat-card-accent" aria-hidden="true" />
       <div className="stat-card-head">
         <span className="stat-dot" aria-hidden="true" />
         <span className="stat-label">{label}</span>
@@ -1591,6 +1592,11 @@ function WalletList({ wallets }: { wallets: Wallet[] }) {
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
     <div className="empty-state">
+      <svg className="empty-state-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="6" y="10" width="36" height="28" rx="4" />
+        <path d="M6 18h36" />
+        <circle cx="24" cy="30" r="4" />
+      </svg>
       <strong>{title}</strong>
       <span>{description}</span>
     </div>
@@ -1618,7 +1624,7 @@ function TransactionTable({
 
   return (
     <div className="table-wrap">
-      <table>
+      <table aria-label="Transaction list">
         <thead>
           <tr>
             <th>Transaction</th>
