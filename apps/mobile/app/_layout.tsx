@@ -22,8 +22,8 @@ function AppNavigator() {
   if (isLoading) {
     return (
       <View style={[styles.loader, { backgroundColor: colors.bg }]}>
-        <ActivityIndicator size="large" color={colors.teal} />
-        <Text style={[styles.loaderText, { color: colors.muted }]}>Memuat PocketFlow...</Text>
+        <ActivityIndicator size="large" color={colors.muted} />
+        <Text style={[styles.loaderText, { color: colors.muted }]}>Loading...</Text>
       </View>
     );
   }
@@ -42,15 +42,15 @@ function AppNavigator() {
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: colors.blue,
+          tabBarActiveTintColor: colors.ink,
           tabBarInactiveTintColor: colors.muted,
           tabBarLabelStyle: styles.tabLabel,
           tabBarStyle: [
             styles.tabBar,
-            { 
-              backgroundColor: colors.panel, 
-              borderTopColor: colors.line 
-            }
+            {
+              backgroundColor: colors.panel,
+              borderTopColor: theme === "light" ? "#f0f0f0" : colors.line,
+            },
           ],
         }}
       >
@@ -58,8 +58,8 @@ function AppNavigator() {
           name="index"
           options={{
             title: "Home",
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="home-outline" size={size} color={color} />
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? "home" : "home-outline"} size={22} color={color} />
             ),
           }}
         />
@@ -67,8 +67,8 @@ function AppNavigator() {
           name="wallets"
           options={{
             title: "Wallet",
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="wallet-outline" size={size} color={color} />
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? "wallet" : "wallet-outline"} size={22} color={color} />
             ),
           }}
         />
@@ -76,8 +76,8 @@ function AppNavigator() {
           name="add"
           options={{
             title: "Add",
-            tabBarIcon: ({ color }) => (
-              <Ionicons name="add-circle-outline" size={24} color={color} />
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? "add-circle" : "add-circle-outline"} size={24} color={color} />
             ),
           }}
         />
@@ -85,8 +85,8 @@ function AppNavigator() {
           name="budgets"
           options={{
             title: "Budget",
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="pie-chart-outline" size={size} color={color} />
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? "pie-chart" : "pie-chart-outline"} size={22} color={color} />
             ),
           }}
         />
@@ -94,8 +94,8 @@ function AppNavigator() {
           name="profile"
           options={{
             title: "Profile",
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="person-outline" size={size} color={color} />
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? "person" : "person-outline"} size={22} color={color} />
             ),
           }}
         />
@@ -115,16 +115,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   loaderText: {
-    fontSize: 13,
-    fontWeight: "700",
+    fontSize: 14,
+    fontWeight: "500",
   },
   tabBar: {
     height: 84,
     paddingTop: 8,
     paddingBottom: 24,
+    borderTopWidth: 1,
   },
   tabLabel: {
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: -0.2,
   },
 });

@@ -100,7 +100,7 @@ export default function ProfileScreen() {
       {/* User Info Group */}
       <Card>
         <View style={styles.profileRow}>
-          <View style={[styles.avatar, { backgroundColor: colors.blue }]}>
+          <View style={[styles.avatar, { backgroundColor: colors.ink }]}>
             <Text style={styles.avatarText}>{initial}</Text>
           </View>
           <View style={styles.info}>
@@ -120,11 +120,11 @@ export default function ProfileScreen() {
       <Card>
         <View style={[styles.settingsRow, compactSettings && styles.settingsRowStacked]}>
           <View style={styles.settingLabelWrap}>
-            <View style={[styles.iconBox, { backgroundColor: colors.blue }]}>
+            <View style={[styles.iconBox, { backgroundColor: colors.ink }]}>
               <Ionicons 
                 name={theme === "light" ? "sunny" : "moon"} 
                 size={16} 
-                color="#ffffff" 
+                color={theme === "light" ? "#ffffff" : "#000000"} 
               />
             </View>
             <View style={styles.settingTextWrap}>
@@ -165,7 +165,7 @@ export default function ProfileScreen() {
               <Text numberOfLines={2} style={[styles.settingSublabel, { color: colors.muted }]}>Bagikan atau simpan laporan riwayat keuangan</Text>
             </View>
           </View>
-          <View style={[styles.trailingIcon, { backgroundColor: theme === "light" ? "#f2f2f7" : "#2c2c2e" }]}>
+          <View style={[styles.trailingIcon, { backgroundColor: theme === "light" ? "#f3f4f6" : "#1f2937" }]}>
             <Ionicons name="share-outline" size={18} color={colors.muted} />
           </View>
         </TouchableOpacity>
@@ -230,15 +230,15 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "800",
-    letterSpacing: 0,
+    fontSize: 28,
+    fontWeight: "700",
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     marginTop: 4,
-    letterSpacing: 0,
-    lineHeight: 22,
+    letterSpacing: -0.1,
+    lineHeight: 20,
   },
   profileRow: {
     flexDirection: "row",
@@ -246,20 +246,15 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 52,
+    height: 52,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
   },
   avatarText: {
-    fontSize: 24,
-    fontWeight: "700",
+    fontSize: 20,
+    fontWeight: "600",
     color: "#ffffff",
   },
   info: {
@@ -267,9 +262,9 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   email: {
-    fontSize: 17,
-    fontWeight: "700",
-    letterSpacing: 0,
+    fontSize: 16,
+    fontWeight: "600",
+    letterSpacing: -0.1,
   },
   badgeRow: {
     flexDirection: "row",
@@ -277,25 +272,25 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   statusIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   status: {
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "500",
   },
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.5,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.8,
     marginTop: 22,
     marginBottom: 6,
     paddingLeft: 4,
   },
   settingsRow: {
     width: "100%",
-    minHeight: 60,
+    minHeight: 52,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -325,40 +320,40 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   iconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 9,
     justifyContent: "center",
     alignItems: "center",
   },
   themeControl: {
-    width: 148,
+    width: 140,
     flexShrink: 0,
   },
   themeControlCompact: {
     width: "100%",
   },
   trailingIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 4,
   },
   settingLabel: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "600",
-    letterSpacing: 0,
+    letterSpacing: -0.1,
   },
   settingSublabel: {
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "400",
     marginTop: 1,
-    lineHeight: 17,
+    lineHeight: 16,
   },
   infoRow: {
-    minHeight: 48,
+    minHeight: 40,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -369,16 +364,16 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     maxWidth: "50%",
     textAlign: "right",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
-    letterSpacing: 0,
+    letterSpacing: -0.1,
   },
   divider: {
     height: 1,
-    marginVertical: 6,
+    marginVertical: 4,
   },
   signOutWrapper: {
-    marginTop: 28,
-    marginBottom: 32,
+    marginTop: 20,
+    marginBottom: 20,
   },
 });

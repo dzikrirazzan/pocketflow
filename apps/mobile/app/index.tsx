@@ -355,431 +355,439 @@ export default function HomeScreen() {
 
   return (
     <Screen contentStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={[styles.eyebrow, { color: colors.blue }]}>PocketFlow</Text>
-          <Text style={[styles.title, { color: colors.ink }]}>Uang kamu ada di mana, kelihatan jelas.</Text>
-        </View>
+      <View style={styles.header}>
+        <Text style={[styles.eyebrow, { color: colors.muted }]}>PocketFlow</Text>
+        <Text style={[styles.title, { color: colors.ink }]}>Uang kamu ada di mana, kelihatan jelas.</Text>
+      </View>
 
-        <TopProgressBar visible={loadingData || Boolean(deletingTransactionId)} />
-        {loadError ? <ErrorState message={loadError} onRetry={() => load(period, startDate, endDate, false)} /> : null}
+      <TopProgressBar visible={loadingData || Boolean(deletingTransactionId)} />
+      {loadError ? <ErrorState message={loadError} onRetry={() => load(period, startDate, endDate, false)} /> : null}
 
-        <Card>
-          <Text style={[styles.cardLabel, { color: colors.muted }]}>Total Balance</Text>
-          <Text style={[styles.balance, { color: colors.ink }]}>{rupiah(totalBalance)}</Text>
-          <View style={styles.row}>
+      <Card>
+        <Text style={[styles.cardLabel, { color: colors.muted }]}>Total Balance</Text>
+        <Text style={[styles.balance, { color: colors.ink }]}>{rupiah(totalBalance)}</Text>
+        <View style={styles.row}>
+          <View style={styles.indicatorWrap}>
+            <Ionicons name="arrow-up-circle-outline" size={16} color={colors.green} />
             <Text style={[styles.good, { color: colors.green }]}>Income {rupiah(summary?.totals.income ?? 0)}</Text>
+          </View>
+          <View style={styles.indicatorWrap}>
+            <Ionicons name="arrow-down-circle-outline" size={16} color={colors.red} />
             <Text style={[styles.bad, { color: colors.red }]}>Expense {rupiah(summary?.totals.expense ?? 0)}</Text>
           </View>
-        </Card>
-
-        <View style={styles.filterSection}>
-          <Segmented
-            value={period}
-            options={["daily", "weekly", "monthly", "yearly", "custom"]}
-            onChange={handlePeriodChange}
-          />
-          {period === "custom" && (
-            <View style={[styles.customRangeWrap, { backgroundColor: colors.panel, borderColor: colors.line }]}>
-              <View style={[styles.customDateFields, isCompact && styles.customDateFieldsStacked]}>
-                <View style={[styles.customDateField, isCompact && styles.customDateFieldStacked]}>
-                  <Field label="Mulai (YYYY-MM-DD)" value={startDate} onChangeText={setStartDate} placeholder="2026-05-01" />
-                </View>
-                <View style={[styles.customDateField, isCompact && styles.customDateFieldStacked]}>
-                  <Field label="Selesai (YYYY-MM-DD)" value={endDate} onChangeText={setEndDate} placeholder="2026-05-30" />
-                </View>
-              </View>
-              <View style={{ marginTop: 8 }}>
-                <Button label="Terapkan Filter" onPress={handleApplyCustomRange} loading={loadingData} disabled={loadingData} />
-              </View>
-            </View>
-          )}
         </View>
+      </Card>
 
-        {/* Premium Filled Area Chart */}
-        <Text style={[styles.sectionTitle, { color: colors.ink }]}>Trend Analisis (Area Chart)</Text>
-        <Card>
-          {transactions.length === 0 ? (
-            <View style={styles.emptyChart}>
-              <Ionicons name="analytics-outline" size={48} color={colors.muted} />
-              <Text style={[styles.emptyText, { color: colors.muted }]}>Belum ada transaksi di periode ini.</Text>
-            </View>
-          ) : (
-            <View>
-              <View style={styles.chartHeaderRow}>
-                <View style={styles.chartSegmentWrap}>
-                  <Segmented
-                    value={chartView}
-                    options={["expense", "income"]}
-                    onChange={(val) => setChartView(val as any)}
-                  />
-                </View>
-                <View style={styles.legendItem}>
-                  <View 
-                    style={[
-                      styles.legendDot, 
-                      { backgroundColor: chartView === "income" ? colors.green : colors.red }
-                    ]} 
-                  />
-                  <Text style={[styles.legendLabel, { color: colors.muted }]}>
-                    {chartView === "income" ? "Income" : "Expense"}
-                  </Text>
-                </View>
+      <View style={styles.filterSection}>
+        <Segmented
+          value={period}
+          options={["daily", "weekly", "monthly", "yearly", "custom"]}
+          onChange={handlePeriodChange}
+        />
+        {period === "custom" && (
+          <View style={[styles.customRangeWrap, { backgroundColor: colors.panel, borderColor: colors.line }]}>
+            <View style={[styles.customDateFields, isCompact && styles.customDateFieldsStacked]}>
+              <View style={[styles.customDateField, isCompact && styles.customDateFieldStacked]}>
+                <Field label="Mulai (YYYY-MM-DD)" value={startDate} onChangeText={setStartDate} placeholder="2026-05-01" />
               </View>
+              <View style={[styles.customDateField, isCompact && styles.customDateFieldStacked]}>
+                <Field label="Selesai (YYYY-MM-DD)" value={endDate} onChangeText={setEndDate} placeholder="2026-05-30" />
+              </View>
+            </View>
+            <View style={{ marginTop: 8 }}>
+              <Button label="Terapkan Filter" onPress={handleApplyCustomRange} loading={loadingData} disabled={loadingData} />
+            </View>
+          </View>
+        )}
+      </View>
 
-              {/* Area Canvas */}
-              <View 
-                style={styles.chartArea}
-                onLayout={(e) => setChartWidth(e.nativeEvent.layout.width)}
-              >
-                {/* Horizontal Grid lines */}
-                <View style={[styles.gridLine, { top: "15%", borderBottomColor: colors.line }]} />
-                <View style={[styles.gridLine, { top: "45%", borderBottomColor: colors.line }]} />
-                <View style={[styles.gridLine, { top: "75%", borderBottomColor: colors.line }]} />
+      {/* Premium Filled Area Chart */}
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>Trend Analisis (Area Chart)</Text>
+      <Card>
+        {transactions.length === 0 ? (
+          <View style={styles.emptyChart}>
+            <Ionicons name="analytics-outline" size={36} color={colors.muted} />
+            <Text style={[styles.emptyText, { color: colors.muted }]}>Belum ada transaksi di periode ini.</Text>
+          </View>
+        ) : (
+          <View>
+            <View style={styles.chartHeaderRow}>
+              <View style={styles.chartSegmentWrap}>
+                <Segmented
+                  value={chartView}
+                  options={["expense", "income"]}
+                  onChange={(val) => setChartView(val as any)}
+                />
+              </View>
+              <View style={styles.legendItem}>
+                <View 
+                  style={[
+                    styles.legendDot, 
+                    { backgroundColor: chartView === "income" ? colors.green : colors.red }
+                  ]} 
+                />
+                <Text style={[styles.legendLabel, { color: colors.muted }]}>
+                  {chartView === "income" ? "Income" : "Expense"}
+                </Text>
+              </View>
+            </View>
 
-                {/* Translucent Area Fills styled as clean vertical accent needles to stay strictly below vector slopes */}
-                <View style={[styles.segmentsRow, { zIndex: 1 }]}>
-                  {chartBuckets.map((bucket, idx) => {
-                    const value = chartView === "income" ? bucket.income : bucket.expense;
-                    const heightPct = (value / chartMaxVal) * 75; // matching dot calculation
-                    const isSelected = selectedBar?.index === idx;
+            {/* Area Canvas */}
+            <View 
+              style={styles.chartArea}
+              onLayout={(e) => setChartWidth(e.nativeEvent.layout.width)}
+            >
+              {/* Horizontal Grid lines */}
+              <View style={[styles.gridLine, { top: "15%", borderBottomColor: colors.line }]} />
+              <View style={[styles.gridLine, { top: "45%", borderBottomColor: colors.line }]} />
+              <View style={[styles.gridLine, { top: "75%", borderBottomColor: colors.line }]} />
 
-                    return (
-                      <View key={idx} style={styles.chartCol}>
-                        <TouchableOpacity
-                          activeOpacity={0.9}
-                          onPress={() => setSelectedBar(isSelected ? null : { ...bucket, index: idx })}
-                          style={[
-                            styles.areaClickArea, 
-                            isSelected && { backgroundColor: theme === "light" ? "rgba(0, 122, 255, 0.04)" : "rgba(10, 132, 255, 0.06)" }
-                          ]}
-                        >
-                          <View 
-                            style={{ 
-                              height: `${heightPct}%`,
-                              width: 10,
-                              backgroundColor: isSelected 
-                                ? (chartView === "income" ? colors.green : colors.red)
-                                : (chartView === "income" ? "rgba(52, 199, 89, 0.12)" : "rgba(255, 69, 58, 0.12)"),
-                              borderRadius: 5,
-                              alignSelf: "center",
-                            }} 
-                          />
-                        </TouchableOpacity>
-                        <Text numberOfLines={1} style={[styles.barLabel, { color: colors.muted, zIndex: 5 }]}>{bucket.label}</Text>
-                      </View>
-                    );
-                  })}
-                </View>
+              {/* Translucent Area Fills styled as clean vertical accent needles to stay strictly below vector slopes */}
+              <View style={[styles.segmentsRow, { zIndex: 1 }]}>
+                {chartBuckets.map((bucket, idx) => {
+                  const value = chartView === "income" ? bucket.income : bucket.expense;
+                  const heightPct = (value / chartMaxVal) * 75; // matching dot calculation
+                  const isSelected = selectedBar?.index === idx;
 
-                {/* Continuous Line Overlays */}
-                {lines.map((line) => (
-                  <View
-                    key={line.key}
-                    style={{
-                      position: "absolute",
-                      left: line.left,
-                      top: line.top,
-                      width: line.width,
-                      height: 3,
-                      backgroundColor: chartView === "income" ? colors.green : colors.red,
-                      transform: [
-                        { translateX: -line.width / 2 },
-                        { rotate: `${line.angle}deg` },
-                        { translateX: line.width / 2 },
-                      ],
-                      opacity: 0.9,
-                      zIndex: 2,
-                    }}
-                  />
-                ))}
-
-                {/* Glowing Data Dots */}
-                {dots.map((dot) => {
-                  const isSelected = selectedBar?.index === dot.idx;
                   return (
-                    <View
-                      key={`dot-${dot.idx}`}
-                      style={{
-                        position: "absolute",
-                        left: dot.cx - 5,
-                        top: dot.cy - 5,
-                        width: 10,
-                        height: 10,
-                        borderRadius: 5,
-                        backgroundColor: chartView === "income" ? colors.green : colors.red,
-                        borderWidth: 2,
-                        borderColor: colors.panel,
-                        zIndex: 3,
-                        shadowColor: chartView === "income" ? colors.green : colors.red,
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: isSelected ? 0.8 : 0.4,
-                        shadowRadius: isSelected ? 6 : 3,
-                        elevation: 3,
-                      }}
-                    />
+                    <View key={idx} style={styles.chartCol}>
+                      <TouchableOpacity
+                        activeOpacity={0.9}
+                        onPress={() => setSelectedBar(isSelected ? null : { ...bucket, index: idx })}
+                        style={[
+                          styles.areaClickArea, 
+                          isSelected && { backgroundColor: theme === "light" ? "rgba(0, 0, 0, 0.02)" : "rgba(255, 255, 255, 0.04)" }
+                        ]}
+                      >
+                        <View 
+                          style={{ 
+                            height: `${heightPct}%`,
+                            width: 6,
+                            backgroundColor: isSelected 
+                              ? (chartView === "income" ? colors.green : colors.red)
+                              : (chartView === "income" ? "rgba(5, 150, 105, 0.1)" : "rgba(220, 38, 38, 0.1)"),
+                            borderRadius: 3,
+                            alignSelf: "center",
+                          }} 
+                        />
+                      </TouchableOpacity>
+                      <Text numberOfLines={1} style={[styles.barLabel, { color: colors.muted, zIndex: 5 }]}>{bucket.label}</Text>
+                    </View>
                   );
                 })}
               </View>
 
-              {selectedBar && (
-                <View style={[styles.chartTooltip, { backgroundColor: theme === "light" ? "#f2f2f7" : "#2c2c2e", borderColor: colors.line }]}>
-                  <Text style={[styles.tooltipTitle, { color: colors.ink }]}>Detail {selectedBar.label}:</Text>
-                  {chartView === "income" ? (
-                    <Text style={[styles.goodText, { color: colors.green }]}>Income: {rupiah(selectedBar.income)}</Text>
-                  ) : (
-                    <Text style={[styles.badText, { color: colors.red }]}>Expense: {rupiah(selectedBar.expense)}</Text>
-                  )}
-                  <Text style={[styles.netText, { color: colors.blue, borderTopColor: colors.line }]}>
-                    Net: {rupiah(selectedBar.income - selectedBar.expense)}
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-        </Card>
+              {/* Continuous Line Overlays */}
+              {lines.map((line) => (
+                <View
+                  key={line.key}
+                  style={{
+                    position: "absolute",
+                    left: line.left,
+                    top: line.top,
+                    width: line.width,
+                    height: 2,
+                    backgroundColor: chartView === "income" ? colors.green : colors.red,
+                    transform: [
+                      { translateX: -line.width / 2 },
+                      { rotate: `${line.angle}deg` },
+                      { translateX: line.width / 2 },
+                    ],
+                    opacity: 0.9,
+                    zIndex: 2,
+                  }}
+                />
+              ))}
 
-        {/* Expense by Category Progress Chart */}
-        <Text style={[styles.sectionTitle, { color: colors.ink }]}>Expense by Category</Text>
-        <Card>
-          {!summary || summary.byCategory.length === 0 ? (
-            <View style={styles.emptyChart}>
-              <Ionicons name="pie-chart-outline" size={48} color={colors.muted} />
-              <Text style={[styles.emptyText, { color: colors.muted }]}>Tidak ada pengeluaran kategori.</Text>
-            </View>
-          ) : (
-            <View style={styles.categoriesArea}>
-              {summary.byCategory.map((cat, idx) => {
-                const catTotal = Number(cat.total);
-                const totalExp = summary.totals.expense || 1;
-                const pct = Math.round((catTotal / totalExp) * 100);
+              {/* Glowing Data Dots */}
+              {dots.map((dot) => {
+                const isSelected = selectedBar?.index === dot.idx;
                 return (
-                  <View key={idx} style={styles.categoryRow}>
-                    <View style={styles.categoryHeader}>
-                      <View style={styles.categoryTitleWrap}>
-                        <View style={[styles.categoryDot, { backgroundColor: cat.color || colors.muted }]} />
-                        <Text numberOfLines={1} style={[styles.categoryName, { color: colors.ink }]}>{cat.categoryName || "Uncategorized"}</Text>
-                      </View>
-                      <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.78} style={[styles.categoryAmount, { color: colors.ink }]}>{rupiah(catTotal)} ({pct}%)</Text>
-                    </View>
-                    <View style={[styles.categoryProgressTrack, { backgroundColor: theme === "light" ? "#e5e5ea" : "#2c2c2e" }]}>
-                      <View
-                        style={[
-                          styles.categoryProgressBar,
-                          { width: `${pct}%`, backgroundColor: cat.color || colors.teal }
-                        ]}
-                      />
-                    </View>
-                  </View>
+                  <View
+                    key={`dot-${dot.idx}`}
+                    style={{
+                      position: "absolute",
+                      left: dot.cx - 4,
+                      top: dot.cy - 4,
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: chartView === "income" ? colors.green : colors.red,
+                      borderWidth: 1.5,
+                      borderColor: colors.panel,
+                      zIndex: 3,
+                      shadowColor: chartView === "income" ? colors.green : colors.red,
+                      shadowOffset: { width: 0, height: 0 },
+                      shadowOpacity: isSelected ? 0.8 : 0.4,
+                      shadowRadius: isSelected ? 6 : 3,
+                      elevation: 3,
+                    }}
+                  />
                 );
               })}
             </View>
-          )}
-        </Card>
 
-        {/* My Wallets Breakdown */}
-        <Text style={[styles.sectionTitle, { color: colors.ink }]}>My Wallets</Text>
-        <View style={styles.walletGrid}>
-          {wallets.length === 0 ? (
-            <Text style={[styles.emptyText, { color: colors.muted }]}>Belum ada wallet. Silakan buat di menu Wallet.</Text>
-          ) : (
-            wallets.map((wallet) => (
-              <View 
-                key={wallet.id} 
-                style={[
-                  styles.walletCard, 
-                  { 
-                    backgroundColor: colors.panel, 
-                    borderLeftColor: wallet.color,
-                    borderColor: colors.line,
-                    borderWidth: 1,
-                  }
-                ]}
-              >
-                <Text numberOfLines={1} style={[styles.walletName, { color: colors.muted }]}>{wallet.name}</Text>
-                <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82} style={[styles.walletBalance, { color: colors.ink }]}>{rupiah(wallet.balance)}</Text>
+            {selectedBar && (
+              <View style={[styles.chartTooltip, { backgroundColor: theme === "light" ? "#f9fafb" : "#1f2937", borderColor: colors.line }]}>
+                <Text style={[styles.tooltipTitle, { color: colors.ink }]}>Detail {selectedBar.label}:</Text>
+                {chartView === "income" ? (
+                  <Text style={[styles.goodText, { color: colors.green }]}>Income: {rupiah(selectedBar.income)}</Text>
+                ) : (
+                  <Text style={[styles.badText, { color: colors.red }]}>Expense: {rupiah(selectedBar.expense)}</Text>
+                )}
+                <Text style={[styles.netText, { color: colors.blue, borderTopColor: colors.line }]}>
+                  Net: {rupiah(selectedBar.income - selectedBar.expense)}
+                </Text>
               </View>
-            ))
-          )}
-        </View>
+            )}
+          </View>
+        )}
+      </Card>
 
-        {/* Recent Transactions list */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Recent Transactions</Text>
-          <Text style={[styles.badgeCount, { backgroundColor: theme === "light" ? "#e5e5ea" : "#2c2c2e", color: colors.muted }]}>
-            {filteredAndSortedTransactions.length} items
-          </Text>
-        </View>
+      {/* Expense by Category Progress Chart */}
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>Expense by Category</Text>
+      <Card>
+        {!summary || summary.byCategory.length === 0 ? (
+          <View style={styles.emptyChart}>
+            <Ionicons name="pie-chart-outline" size={36} color={colors.muted} />
+            <Text style={[styles.emptyText, { color: colors.muted }]}>Tidak ada pengeluaran kategori.</Text>
+          </View>
+        ) : (
+          <View style={styles.categoriesArea}>
+            {summary.byCategory.map((cat, idx) => {
+              const catTotal = Number(cat.total);
+              const totalExp = summary.totals.expense || 1;
+              const pct = Math.round((catTotal / totalExp) * 100);
+              return (
+                <View key={idx} style={styles.categoryRow}>
+                  <View style={styles.categoryHeader}>
+                    <View style={styles.categoryTitleWrap}>
+                      <View style={[styles.categoryDot, { backgroundColor: cat.color || colors.muted }]} />
+                      <Text numberOfLines={1} style={[styles.categoryName, { color: colors.ink }]}>{cat.categoryName || "Uncategorized"}</Text>
+                    </View>
+                    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.78} style={[styles.categoryAmount, { color: colors.ink }]}>{rupiah(catTotal)} ({pct}%)</Text>
+                  </View>
+                  <View style={[styles.categoryProgressTrack, { backgroundColor: theme === "light" ? "#f3f4f6" : "#1f2937" }]}>
+                    <View
+                      style={[
+                        styles.categoryProgressBar,
+                        { width: `${pct}%`, backgroundColor: cat.color || colors.teal }
+                      ]}
+                    />
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </Card>
 
-        <Card>
-          <View style={styles.searchFilterWrap}>
-            <Field
-              label=""
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Cari catatan, wallet, kategori..."
-            />
+      {/* My Wallets Breakdown */}
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>My Wallets</Text>
+      <View style={styles.walletGrid}>
+        {wallets.length === 0 ? (
+          <Text style={[styles.emptyText, { color: colors.muted }]}>Belum ada wallet. Silakan buat di menu Wallet.</Text>
+        ) : (
+          wallets.map((wallet) => (
+            <View 
+              key={wallet.id} 
+              style={[
+                styles.walletCard, 
+                { 
+                  backgroundColor: colors.panel, 
+                  borderColor: colors.line,
+                  borderWidth: 1,
+                }
+              ]}
+            >
+              <View style={styles.walletHeaderRow}>
+                <View style={[styles.walletDot, { backgroundColor: wallet.color }]} />
+                <Text numberOfLines={1} style={[styles.walletName, { color: colors.muted }]}>{wallet.name}</Text>
+              </View>
+              <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82} style={[styles.walletBalance, { color: colors.ink }]}>{rupiah(wallet.balance)}</Text>
+            </View>
+          ))
+        )}
+      </View>
 
-            <Text style={[styles.subFilterLabel, { color: colors.ink }]}>Tipe Transaksi:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-              {(["all", "income", "expense", "transfer"] as const).map((typeOpt) => (
-                <TouchableOpacity
-                  key={typeOpt}
-                  onPress={() => setFilterType(typeOpt)}
-                  style={[
-                    styles.pill, 
-                    { borderColor: colors.line },
-                    filterType === typeOpt ? { backgroundColor: colors.blue, borderColor: colors.blue } : { backgroundColor: theme === "light" ? "#e5e5ea" : "#1c1c1e" }
-                  ]}
-                >
-                  <Text 
-                    style={[
-                      styles.pillText, 
-                      { color: filterType === typeOpt ? "#ffffff" : colors.muted }
-                    ]}
-                  >
-                    {typeOpt === "all" ? "Semua Tipe" : typeOpt}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+      {/* Recent Transactions list */}
+      <View style={styles.sectionHeaderRow}>
+        <Text style={[styles.sectionTitle, { color: colors.ink }]}>Recent Transactions</Text>
+        <Text style={[styles.badgeCount, { backgroundColor: theme === "light" ? "#f3f4f6" : "#1f2937", color: colors.muted }]}>
+          {filteredAndSortedTransactions.length} items
+        </Text>
+      </View>
 
-            <Text style={[styles.subFilterLabel, { color: colors.ink }]}>Pilih Wallet:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+      <Card>
+        <View style={styles.searchFilterWrap}>
+          <Field
+            label=""
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Cari catatan, wallet, kategori..."
+          />
+
+          <Text style={[styles.subFilterLabel, { color: colors.ink }]}>Tipe Transaksi:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+            {(["all", "income", "expense", "transfer"] as const).map((typeOpt) => (
               <TouchableOpacity
-                onPress={() => setFilterWalletId("all")}
+                key={typeOpt}
+                onPress={() => setFilterType(typeOpt)}
                 style={[
                   styles.pill, 
                   { borderColor: colors.line },
-                  filterWalletId === "all" ? { backgroundColor: colors.blue, borderColor: colors.blue } : { backgroundColor: theme === "light" ? "#e5e5ea" : "#1c1c1e" }
+                  filterType === typeOpt ? { backgroundColor: colors.ink, borderColor: colors.ink } : { backgroundColor: theme === "light" ? "#f3f4f6" : "#1f2937" }
                 ]}
               >
                 <Text 
                   style={[
                     styles.pillText, 
-                    { color: filterWalletId === "all" ? "#ffffff" : colors.muted }
+                    { color: filterType === typeOpt ? (theme === "light" ? "#ffffff" : "#000000") : colors.muted }
                   ]}
                 >
-                  Semua Dompet
+                  {typeOpt === "all" ? "Semua Tipe" : typeOpt}
                 </Text>
               </TouchableOpacity>
-              {wallets.map((w) => (
-                <TouchableOpacity
-                  key={w.id}
-                  onPress={() => setFilterWalletId(w.id)}
-                  style={[
-                    styles.pill, 
-                    { borderColor: colors.line },
-                    filterWalletId === w.id ? { backgroundColor: colors.blue, borderColor: colors.blue } : { backgroundColor: theme === "light" ? "#e5e5ea" : "#1c1c1e" }
-                  ]}
-                >
-                  <Text 
-                    style={[
-                      styles.pillText, 
-                      { color: filterWalletId === w.id ? "#ffffff" : colors.muted }
-                    ]}
-                  >
-                    {w.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+            ))}
+          </ScrollView>
 
-            <Text style={[styles.subFilterLabel, { color: colors.ink }]}>Urutkan:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-              {(["newest", "oldest", "highest", "lowest"] as const).map((sortOpt) => (
-                <TouchableOpacity
-                  key={sortOpt}
-                  onPress={() => setSortOrder(sortOpt)}
+          <Text style={[styles.subFilterLabel, { color: colors.ink }]}>Pilih Wallet:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+            <TouchableOpacity
+              onPress={() => setFilterWalletId("all")}
+              style={[
+                styles.pill, 
+                { borderColor: colors.line },
+                filterWalletId === "all" ? { backgroundColor: colors.ink, borderColor: colors.ink } : { backgroundColor: theme === "light" ? "#f3f4f6" : "#1f2937" }
+              ]}
+            >
+              <Text 
+                style={[
+                  styles.pillText, 
+                  { color: filterWalletId === "all" ? (theme === "light" ? "#ffffff" : "#000000") : colors.muted }
+                ]}
+              >
+                Semua Dompet
+              </Text>
+            </TouchableOpacity>
+            {wallets.map((w) => (
+              <TouchableOpacity
+                key={w.id}
+                onPress={() => setFilterWalletId(w.id)}
+                style={[
+                  styles.pill, 
+                  { borderColor: colors.line },
+                  filterWalletId === w.id ? { backgroundColor: colors.ink, borderColor: colors.ink } : { backgroundColor: theme === "light" ? "#f3f4f6" : "#1f2937" }
+                ]}
+              >
+                <Text 
                   style={[
-                    styles.pill, 
-                    { borderColor: colors.line },
-                    sortOrder === sortOpt ? { backgroundColor: colors.blue, borderColor: colors.blue } : { backgroundColor: theme === "light" ? "#e5e5ea" : "#1c1c1e" }
+                    styles.pillText, 
+                    { color: filterWalletId === w.id ? (theme === "light" ? "#ffffff" : "#000000") : colors.muted }
                   ]}
                 >
-                  <Text 
-                    style={[
-                      styles.pillText, 
-                      { color: sortOrder === sortOpt ? "#ffffff" : colors.muted }
-                    ]}
-                  >
-                    {sortOpt === "newest" ? "Terbaru" : sortOpt === "oldest" ? "Terlama" : sortOpt === "highest" ? "Terbesar" : "Terkecil"}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+                  {w.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          <Text style={[styles.subFilterLabel, { color: colors.ink }]}>Urutkan:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+            {(["newest", "oldest", "highest", "lowest"] as const).map((sortOpt) => (
+              <TouchableOpacity
+                key={sortOpt}
+                onPress={() => setSortOrder(sortOpt)}
+                style={[
+                  styles.pill, 
+                  { borderColor: colors.line },
+                  sortOrder === sortOpt ? { backgroundColor: colors.ink, borderColor: colors.ink } : { backgroundColor: theme === "light" ? "#f3f4f6" : "#1f2937" }
+                ]}
+              >
+                <Text 
+                  style={[
+                    styles.pillText, 
+                    { color: sortOrder === sortOpt ? (theme === "light" ? "#ffffff" : "#000000") : colors.muted }
+                  ]}
+                >
+                  {sortOpt === "newest" ? "Terbaru" : sortOpt === "oldest" ? "Terlama" : sortOpt === "highest" ? "Terbesar" : "Terkecil"}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </Card>
+
+      {/* Transactions list */}
+      {filteredAndSortedTransactions.length === 0 ? (
+        <Card>
+          <View style={styles.emptyCenter}>
+            <Ionicons name="receipt-outline" size={36} color={colors.muted} />
+            <Text style={[styles.emptyText, { color: colors.muted }]}>Tidak ada transaksi yang cocok.</Text>
           </View>
         </Card>
+      ) : (
+        filteredAndSortedTransactions.map((transaction) => {
+          const categoryName = transaction.categoryId
+            ? summary?.byCategory.find((c) => c.categoryId === transaction.categoryId)?.categoryName || "Category"
+            : null;
+          
+          const walletName = transaction.walletId
+            ? wallets.find(w => w.id === transaction.walletId)?.name || "Wallet"
+            : null;
 
-        {/* Transactions list */}
-        {filteredAndSortedTransactions.length === 0 ? (
-          <Card>
-            <View style={styles.emptyCenter}>
-              <Ionicons name="receipt-outline" size={48} color={colors.muted} />
-              <Text style={[styles.emptyText, { color: colors.muted }]}>Tidak ada transaksi yang cocok.</Text>
-            </View>
-          </Card>
-        ) : (
-          filteredAndSortedTransactions.map((transaction) => {
-            const categoryName = transaction.categoryId
-              ? summary?.byCategory.find((c) => c.categoryId === transaction.categoryId)?.categoryName || "Category"
-              : null;
-            
-            const walletName = transaction.walletId
-              ? wallets.find(w => w.id === transaction.walletId)?.name || "Wallet"
-              : null;
-
-            return (
-          <Card key={transaction.id}>
-                <View style={styles.rowBetween}>
-                  <View style={styles.transactionInfo}>
-                    <Text numberOfLines={1} style={[styles.transactionNote, { color: colors.ink }]}>{transaction.note || transaction.type}</Text>
-                    <Text numberOfLines={2} style={[styles.transactionMeta, { color: colors.muted }]}>
-                      {shortDate(transaction.happenedAt)}
-                      {walletName ? ` • ${walletName}` : ""}
-                      {categoryName ? ` • ${categoryName}` : ""}
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.rightActionRow}>
-                    <Text
-                      numberOfLines={1}
-                      adjustsFontSizeToFit
-                      minimumFontScale={0.76}
-                      style={transaction.type === "income" ? [styles.goodAmount, { color: colors.green }] : [styles.badAmount, { color: colors.red }]}
+          return (
+            <Card key={transaction.id}>
+              <View style={styles.rowBetween}>
+                <View style={styles.transactionInfo}>
+                  <Text numberOfLines={1} style={[styles.transactionNote, { color: colors.ink }]}>{transaction.note || transaction.type}</Text>
+                  <Text numberOfLines={2} style={[styles.transactionMeta, { color: colors.muted }]}>
+                    {shortDate(transaction.happenedAt)}
+                    {walletName ? ` • ${walletName}` : ""}
+                    {categoryName ? ` • ${categoryName}` : ""}
+                  </Text>
+                </View>
+                
+                <View style={styles.rightActionRow}>
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.76}
+                    style={transaction.type === "income" ? [styles.goodAmount, { color: colors.green }] : [styles.badAmount, { color: colors.red }]}
+                  >
+                    {transaction.type === "income" ? "+" : "-"}
+                    {rupiah(transaction.amount)}
+                  </Text>
+                  <View style={styles.actionButtons}>
+                    <TouchableOpacity
+                      activeOpacity={0.75}
+                      hitSlop={6}
+                      disabled={Boolean(deletingTransactionId)}
+                      onPress={() => handleEditTransaction(transaction)}
+                      style={[styles.actionBtn, { backgroundColor: theme === "light" ? "#f3f4f6" : "#1f2937" }]}
                     >
-                      {transaction.type === "income" ? "+" : "-"}
-                      {rupiah(transaction.amount)}
-                    </Text>
-                    <View style={styles.actionButtons}>
-                      <TouchableOpacity
-                        activeOpacity={0.75}
-                        hitSlop={6}
-                        disabled={Boolean(deletingTransactionId)}
-                        onPress={() => handleEditTransaction(transaction)}
-                        style={[styles.actionBtn, { backgroundColor: theme === "light" ? "#f1f5f9" : "#2c2c2e" }]}
-                      >
-                        <Ionicons name="pencil-outline" size={17} color={colors.ink} />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        activeOpacity={0.75}
-                        hitSlop={6}
-                        disabled={Boolean(deletingTransactionId)}
-                        onPress={() => handleDeleteTransaction(transaction.id, transaction.note || transaction.type)}
-                        style={[styles.actionBtn, { backgroundColor: theme === "light" ? "#fef2f2" : "#3b1e1e" }]}
-                      >
-                        {deletingTransactionId === transaction.id ? (
-                          <ActivityIndicator size="small" color={colors.red} />
-                        ) : (
-                          <Ionicons name="trash-outline" size={17} color={colors.red} />
-                        )}
-                      </TouchableOpacity>
-                    </View>
+                      <Ionicons name="pencil-outline" size={15} color={colors.ink} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.75}
+                      hitSlop={6}
+                      disabled={Boolean(deletingTransactionId)}
+                      onPress={() => handleDeleteTransaction(transaction.id, transaction.note || transaction.type)}
+                      style={[styles.actionBtn, { backgroundColor: theme === "light" ? "#fef2f2" : "#3b1e1e" }]}
+                    >
+                      {deletingTransactionId === transaction.id ? (
+                        <ActivityIndicator size="small" color={colors.red} />
+                      ) : (
+                        <Ionicons name="trash-outline" size={15} color={colors.red} />
+                      )}
+                    </TouchableOpacity>
                   </View>
                 </View>
-              </Card>
-            );
-          })
-        )}
+              </View>
+            </Card>
+          );
+        })
+      )}
     </Screen>
   );
 }
@@ -787,28 +795,31 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   scrollContent: { gap: 16 },
   header: { marginBottom: 4 },
-  eyebrow: { fontWeight: "800", marginBottom: 6, fontSize: 14, textTransform: "uppercase", letterSpacing: 0.8 },
-  title: { fontSize: 26, lineHeight: 32, fontWeight: "800", letterSpacing: 0 },
-  cardLabel: { fontWeight: "700", marginBottom: 6, fontSize: 13, letterSpacing: 0 },
-  balance: { fontSize: 32, fontWeight: "900", marginBottom: 12, letterSpacing: 0 },
+  eyebrow: { fontWeight: "700", marginBottom: 4, fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5 },
+  title: { fontSize: 24, lineHeight: 30, fontWeight: "700", letterSpacing: -0.5 },
+  cardLabel: { fontWeight: "600", marginBottom: 4, fontSize: 13, letterSpacing: -0.1 },
+  balance: { fontSize: 30, fontWeight: "700", marginBottom: 10, letterSpacing: -0.5 },
   row: { flexDirection: "row", gap: 14, flexWrap: "wrap" },
+  indicatorWrap: { flexDirection: "row", alignItems: "center", gap: 6 },
   rowBetween: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
-  good: { fontWeight: "800", fontSize: 14 },
-  bad: { fontWeight: "800", fontSize: 14 },
-  goodAmount: { fontWeight: "900", fontSize: 16, letterSpacing: 0, textAlign: "right" },
-  badAmount: { fontWeight: "900", fontSize: 16, letterSpacing: 0, textAlign: "right" },
-  walletGrid: { gap: 10 },
-  walletCard: { borderRadius: 12, padding: 14, borderLeftWidth: 5 },
-  walletName: { fontWeight: "700", fontSize: 13 },
-  walletBalance: { fontSize: 20, fontWeight: "800", marginTop: 4, letterSpacing: 0 },
-  sectionTitle: { fontSize: 17, fontWeight: "800", marginTop: 10, letterSpacing: 0 },
+  good: { fontWeight: "600", fontSize: 14 },
+  bad: { fontWeight: "600", fontSize: 14 },
+  goodAmount: { fontWeight: "600", fontSize: 15, letterSpacing: -0.1, textAlign: "right" },
+  badAmount: { fontWeight: "600", fontSize: 15, letterSpacing: -0.1, textAlign: "right" },
+  walletGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  walletCard: { flex: 1, minWidth: 100, borderRadius: 14, padding: 16, borderStyle: "solid" },
+  walletHeaderRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 },
+  walletDot: { width: 8, height: 8, borderRadius: 4 },
+  walletName: { fontWeight: "600", fontSize: 13 },
+  walletBalance: { fontSize: 18, fontWeight: "700", letterSpacing: -0.2 },
+  sectionTitle: { fontSize: 16, fontWeight: "600", marginTop: 8, letterSpacing: -0.2 },
   transactionInfo: { flex: 1, minWidth: 0, paddingRight: 4 },
-  transactionNote: { fontWeight: "700", fontSize: 15, letterSpacing: 0 },
-  transactionMeta: { marginTop: 4, fontSize: 12, fontWeight: "500", lineHeight: 17 },
+  transactionNote: { fontWeight: "600", fontSize: 15, letterSpacing: -0.1 },
+  transactionMeta: { marginTop: 3, fontSize: 12, fontWeight: "400", lineHeight: 16 },
   emptyCenter: { alignItems: "center", justifyContent: "center", paddingVertical: 20, gap: 8 },
-  emptyText: { fontWeight: "600", fontSize: 14, textAlign: "center" },
-  filterSection: { gap: 10 },
-  customRangeWrap: { borderRadius: 12, padding: 12, borderWidth: 1 },
+  emptyText: { fontWeight: "500", fontSize: 14, textAlign: "center" },
+  filterSection: { gap: 8 },
+  customRangeWrap: { borderRadius: 14, padding: 14, borderWidth: 1 },
   customDateFields: { flexDirection: "row", gap: 10 },
   customDateFieldsStacked: { flexDirection: "column" },
   customDateField: { flex: 1, minWidth: 0 },
@@ -816,49 +827,47 @@ const styles = StyleSheet.create({
   
   // Filled Area Chart Styling
   chartHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 },
-  chartSegmentWrap: { width: 154, maxWidth: "100%" },
+  chartSegmentWrap: { width: 140, maxWidth: "100%" },
   legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-  legendDot: { width: 10, height: 10, borderRadius: 5 },
-  legendLabel: { fontWeight: "700", fontSize: 12 },
-  chartArea: { height: 180, justifyContent: "flex-end", position: "relative", overflow: "hidden", paddingTop: 10 },
-  gridLine: { position: "absolute", left: 0, right: 0, borderBottomWidth: 1, borderStyle: "dashed", opacity: 0.2 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendLabel: { fontWeight: "600", fontSize: 12 },
+  chartArea: { height: 160, justifyContent: "flex-end", position: "relative", overflow: "hidden", paddingTop: 10 },
+  gridLine: { position: "absolute", left: 0, right: 0, borderBottomWidth: 1, borderStyle: "dashed", opacity: 0.15 },
   segmentsRow: { flexDirection: "row", height: "100%", alignItems: "flex-end", justifyContent: "space-around" },
   chartCol: { alignItems: "center", flex: 1, height: "100%", justifyContent: "flex-end" },
   areaClickArea: { height: "100%", width: "100%", justifyContent: "flex-end", alignItems: "stretch", borderRadius: 4, paddingHorizontal: 2 },
-  selectedAreaCol: { backgroundColor: "rgba(142, 142, 147, 0.05)" },
-  areaSegment: { borderTopWidth: 2, borderTopLeftRadius: 3, borderTopRightRadius: 3, opacity: 0.85, width: "100%" },
-  barLabel: { fontSize: 11, fontWeight: "800", marginTop: 6, letterSpacing: 0 },
+  barLabel: { fontSize: 10, fontWeight: "600", marginTop: 6, letterSpacing: -0.1 },
   
   // Interactive Tooltip Styling
-  chartTooltip: { padding: 10, borderRadius: 10, borderWidth: 1, marginTop: 14 },
-  tooltipTitle: { fontWeight: "800", marginBottom: 4, fontSize: 12 },
-  goodText: { fontWeight: "800", fontSize: 13 },
-  badText: { fontWeight: "800", fontSize: 13 },
-  netText: { fontWeight: "900", fontSize: 13, borderTopWidth: 1, paddingTop: 4, marginTop: 4 },
-  emptyChart: { alignItems: "center", justifyContent: "center", paddingVertical: 40, gap: 10 },
+  chartTooltip: { padding: 10, borderRadius: 10, borderWidth: 1, marginTop: 12 },
+  tooltipTitle: { fontWeight: "700", marginBottom: 4, fontSize: 12 },
+  goodText: { fontWeight: "600", fontSize: 13 },
+  badText: { fontWeight: "600", fontSize: 13 },
+  netText: { fontWeight: "700", fontSize: 13, borderTopWidth: 1, paddingTop: 4, marginTop: 4 },
+  emptyChart: { alignItems: "center", justifyContent: "center", paddingVertical: 30, gap: 10 },
   
   // Categories Progress styling
-  categoriesArea: { gap: 14 },
+  categoriesArea: { gap: 12 },
   categoryRow: { gap: 6 },
   categoryHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   categoryTitleWrap: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center", gap: 8 },
-  categoryDot: { width: 10, height: 10, borderRadius: 5 },
-  categoryName: { flex: 1, minWidth: 0, fontWeight: "700", fontSize: 14, letterSpacing: 0 },
-  categoryAmount: { flexShrink: 0, maxWidth: "48%", fontWeight: "700", fontSize: 14, letterSpacing: 0, textAlign: "right" },
-  categoryProgressTrack: { height: 8, borderRadius: 4, overflow: "hidden" },
-  categoryProgressBar: { height: "100%", borderRadius: 4 },
+  categoryDot: { width: 8, height: 8, borderRadius: 4 },
+  categoryName: { flex: 1, minWidth: 0, fontWeight: "600", fontSize: 14, letterSpacing: -0.1 },
+  categoryAmount: { flexShrink: 0, maxWidth: "48%", fontWeight: "600", fontSize: 14, letterSpacing: -0.1, textAlign: "right" },
+  categoryProgressTrack: { height: 6, borderRadius: 3, overflow: "hidden" },
+  categoryProgressBar: { height: "100%", borderRadius: 3 },
   
   // Action Buttons
   rightActionRow: { alignItems: "flex-end", gap: 8, maxWidth: "48%" },
-  actionButtons: { flexDirection: "row", gap: 8 },
-  actionBtn: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  actionButtons: { flexDirection: "row", gap: 6 },
+  actionBtn: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
 
   // Advanced Search & Filter UX
   sectionHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 10, marginTop: 10 },
-  badgeCount: { fontWeight: "800", fontSize: 12, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  searchFilterWrap: { gap: 10 },
-  subFilterLabel: { fontWeight: "700", fontSize: 12, marginTop: 4, letterSpacing: 0 },
-  chipScroll: { flexDirection: "row", gap: 8 },
-  pill: { minHeight: 38, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, borderWidth: 1, marginRight: 6, justifyContent: "center" },
-  pillText: { fontWeight: "700", fontSize: 12, textTransform: "capitalize", letterSpacing: 0 },
+  badgeCount: { fontWeight: "600", fontSize: 12, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
+  searchFilterWrap: { gap: 8 },
+  subFilterLabel: { fontWeight: "600", fontSize: 12, marginTop: 4, letterSpacing: -0.1 },
+  chipScroll: { flexDirection: "row", gap: 6 },
+  pill: { minHeight: 32, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, borderWidth: 1, marginRight: 4, justifyContent: "center" },
+  pillText: { fontWeight: "600", fontSize: 12, textTransform: "capitalize", letterSpacing: -0.1 },
 });

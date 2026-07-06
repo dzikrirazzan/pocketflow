@@ -16,44 +16,31 @@ export function Button({ label, onPress, tone = "primary", loading = false, disa
 
   function handlePressIn() {
     if (isDisabled) return;
-    Animated.spring(scale, {
-      toValue: 0.96,
-      useNativeDriver: true,
-      speed: 40,
-      bounciness: 3,
-    }).start();
+    Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 50, bounciness: 2 }).start();
   }
 
   function handlePressOut() {
-    Animated.spring(scale, {
-      toValue: 1,
-      useNativeDriver: true,
-      speed: 40,
-      bounciness: 3,
-    }).start();
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 2 }).start();
   }
 
   const isDisabled = disabled || loading;
 
-  // Premium dynamic style tokens based on active iOS theme
-  const buttonStyle = {
-    backgroundColor: 
-      tone === "primary" 
-        ? colors.blue 
-        : tone === "soft"
-          ? (theme === "light" ? "#e5e5ea" : "#2c2c2e")
-          : colors.red,
-  };
+  const bg =
+    tone === "primary"
+      ? colors.ink
+      : tone === "soft"
+        ? theme === "light" ? "#f3f4f6" : "#1f2937"
+        : colors.red;
 
-  const labelStyle = {
-    color: 
-      tone === "soft"
+  const fg =
+    tone === "primary"
+      ? theme === "light" ? "#ffffff" : "#000000"
+      : tone === "soft"
         ? colors.ink
-        : "#ffffff",
-  };
+        : "#ffffff";
 
   return (
-    <Animated.View style={{ transform: [{ scale }], opacity: isDisabled ? 0.6 : 1 }}>
+    <Animated.View style={{ transform: [{ scale }], opacity: isDisabled ? 0.5 : 1 }}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ disabled: isDisabled, busy: loading }}
@@ -62,15 +49,12 @@ export function Button({ label, onPress, tone = "primary", loading = false, disa
         onPress={isDisabled ? undefined : onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        style={[styles.button, buttonStyle]}
+        style={[styles.button, { backgroundColor: bg }]}
       >
         {loading ? (
-          <ActivityIndicator
-            size="small"
-            color={tone === "soft" ? colors.ink : "#ffffff"}
-          />
+          <ActivityIndicator size="small" color={fg} />
         ) : (
-          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82} style={[styles.label, labelStyle]}>
+          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82} style={[styles.label, { color: fg }]}>
             {label}
           </Text>
         )}
@@ -81,16 +65,16 @@ export function Button({ label, onPress, tone = "primary", loading = false, disa
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 48,
+    minHeight: 52,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 12,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+    borderRadius: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
   },
   label: {
-    fontSize: 15,
-    fontWeight: "700",
-    letterSpacing: 0,
+    fontSize: 16,
+    fontWeight: "600",
+    letterSpacing: -0.2,
   },
 });

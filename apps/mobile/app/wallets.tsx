@@ -219,7 +219,7 @@ export default function WalletsScreen() {
 
       {wallets.length === 0 ? (
         <View style={styles.emptyCenter}>
-          <Ionicons name="wallet-outline" size={48} color={colors.muted} />
+          <Ionicons name="wallet-outline" size={36} color={colors.muted} />
           <Text style={[styles.emptyText, { color: colors.muted }]}>Belum ada wallet. Silakan tambahkan wallet baru di atas.</Text>
         </View>
       ) : (
@@ -242,9 +242,9 @@ export default function WalletsScreen() {
                     hitSlop={6}
                     disabled={Boolean(deletingWalletId) || adding}
                     onPress={() => startEditWallet(wallet)}
-                    style={[styles.actionBtn, { backgroundColor: theme === "light" ? "#f1f5f9" : "#2c2c2e" }]}
+                    style={[styles.actionBtn, { backgroundColor: theme === "light" ? "#f3f4f6" : "#1f2937" }]}
                   >
-                    <Ionicons name="pencil-outline" size={17} color={colors.ink} />
+                    <Ionicons name="pencil-outline" size={15} color={colors.ink} />
                   </TouchableOpacity>
                   <TouchableOpacity
                     activeOpacity={0.75}
@@ -256,7 +256,7 @@ export default function WalletsScreen() {
                     {deletingWalletId === wallet.id ? (
                       <ActivityIndicator size="small" color={colors.red} />
                     ) : (
-                      <Ionicons name="trash-outline" size={17} color={colors.red} />
+                      <Ionicons name="trash-outline" size={15} color={colors.red} />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -271,21 +271,21 @@ export default function WalletsScreen() {
 
 const styles = StyleSheet.create({
   header: { marginBottom: 4 },
-  title: { fontSize: 32, fontWeight: "800", letterSpacing: 0 },
-  subtitle: { fontSize: 16, marginTop: 4, letterSpacing: 0, lineHeight: 22 },
+  title: { fontSize: 28, fontWeight: "700", letterSpacing: -0.5 },
+  subtitle: { fontSize: 15, marginTop: 4, letterSpacing: -0.1, lineHeight: 20 },
   form: { gap: 12 },
-  formHeader: { fontWeight: "800", fontSize: 16, marginBottom: 4, letterSpacing: 0 },
+  formHeader: { fontWeight: "600", fontSize: 16, marginBottom: 4, letterSpacing: -0.1 },
   row: { flexDirection: "row", alignItems: "center", gap: 12 },
   walletTextWrap: { flex: 1, minWidth: 0 },
   walletRightWrap: { alignItems: "flex-end", gap: 8, maxWidth: "48%" },
-  dot: { width: 12, height: 12, borderRadius: 6 },
-  name: { fontWeight: "700", fontSize: 16, letterSpacing: 0 },
-  meta: { marginTop: 3, textTransform: "capitalize", fontSize: 12, fontWeight: "500" },
-  amount: { fontWeight: "800", fontSize: 16, letterSpacing: 0, textAlign: "right" },
+  dot: { width: 10, height: 10, borderRadius: 5 },
+  name: { fontWeight: "600", fontSize: 16, letterSpacing: -0.1 },
+  meta: { marginTop: 2, textTransform: "capitalize", fontSize: 12, fontWeight: "400" },
+  amount: { fontWeight: "700", fontSize: 16, letterSpacing: -0.2, textAlign: "right" },
   actionRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  actionBtn: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  deleteBtn: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  actionBtn: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  deleteBtn: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   buttonRow: { flexDirection: "row", gap: 10, marginTop: 6 },
   emptyCenter: { alignItems: "center", justifyContent: "center", paddingVertical: 40, gap: 10 },
-  emptyText: { fontWeight: "600", fontSize: 14, textAlign: "center", paddingHorizontal: 20 },
+  emptyText: { fontWeight: "500", fontSize: 14, textAlign: "center", paddingHorizontal: 20 },
 });

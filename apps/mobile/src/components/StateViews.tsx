@@ -28,7 +28,7 @@ export function LoadingState({
   return (
     <Card>
       <View style={styles.stateWrap}>
-        <ActivityIndicator size="large" color={colors.blue} />
+        <ActivityIndicator size="large" color={colors.muted} />
         <View style={styles.stateTextWrap}>
           <Text style={[styles.stateTitle, { color: colors.ink }]}>{title}</Text>
           <Text style={[styles.stateSubtitle, { color: colors.muted }]}>{subtitle}</Text>
@@ -49,9 +49,9 @@ export function EmptyState({ icon, title, subtitle }: EmptyStateProps) {
 
   return (
     <View style={styles.emptyWrap}>
-      <Ionicons name={icon} size={42} color={colors.muted} />
+      <Ionicons name={icon} size={36} color={colors.muted} style={{ opacity: 0.5 }} />
       <View style={styles.stateTextWrap}>
-        <Text style={[styles.stateTitle, { color: colors.ink }]}>{title}</Text>
+        <Text style={[styles.stateTitle, { color: colors.muted }]}>{title}</Text>
         {subtitle ? <Text style={[styles.stateSubtitle, { color: colors.muted }]}>{subtitle}</Text> : null}
       </View>
     </View>
@@ -69,8 +69,8 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
   return (
     <Card>
       <View style={styles.errorWrap}>
-        <View style={[styles.errorIcon, { backgroundColor: theme === "light" ? "#fef2f2" : "#3b1e1e" }]}>
-          <Ionicons name="alert-circle-outline" size={22} color={colors.red} />
+        <View style={[styles.errorIcon, { backgroundColor: theme === "light" ? "#fef2f2" : "#371717" }]}>
+          <Ionicons name="alert-circle-outline" size={20} color={colors.red} />
         </View>
         <View style={styles.errorTextWrap}>
           <Text style={[styles.stateTitle, { color: colors.ink }]}>Data gagal dimuat</Text>
@@ -81,9 +81,9 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
             accessibilityRole="button"
             hitSlop={8}
             onPress={onRetry}
-            style={[styles.retryButton, { backgroundColor: colors.blue }]}
+            style={[styles.retryButton, { backgroundColor: colors.ink }]}
           >
-            <Text style={styles.retryText}>Coba Lagi</Text>
+            <Text style={[styles.retryText, { color: theme === "light" ? "#ffffff" : "#000000" }]}>Coba Lagi</Text>
           </Pressable>
         ) : null}
       </View>
@@ -105,7 +105,7 @@ export function TopProgressBar({ visible }: { visible: boolean }) {
     const animation = Animated.loop(
       Animated.timing(translateX, {
         toValue: width,
-        duration: 950,
+        duration: 1000,
         useNativeDriver: true,
       })
     );
@@ -117,13 +117,13 @@ export function TopProgressBar({ visible }: { visible: boolean }) {
   if (!visible) return null;
 
   return (
-    <View style={[styles.progressTrack, { backgroundColor: theme === "light" ? "#e5e5ea" : "#2c2c2e" }]}>
+    <View style={[styles.progressTrack, { backgroundColor: theme === "light" ? "#e5e7eb" : "#1f2937" }]}>
       <Animated.View
         style={[
           styles.progressFill,
           {
-            backgroundColor: colors.blue,
-            width: Math.max(120, width * 0.42),
+            backgroundColor: colors.ink,
+            width: Math.max(120, width * 0.35),
             transform: [{ translateX }],
           },
         ]}
@@ -136,10 +136,10 @@ const styles = StyleSheet.create({
   stateWrap: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 14,
-    minHeight: 148,
-    paddingVertical: 18,
-    paddingHorizontal: 10,
+    gap: 16,
+    minHeight: 140,
+    paddingVertical: 20,
+    paddingHorizontal: 12,
   },
   stateTextWrap: {
     alignItems: "center",
@@ -147,55 +147,54 @@ const styles = StyleSheet.create({
   },
   stateTitle: {
     fontSize: 15,
-    fontWeight: "800",
+    fontWeight: "600",
     textAlign: "center",
   },
   stateSubtitle: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "400",
     lineHeight: 18,
     textAlign: "center",
   },
   emptyWrap: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
-    minHeight: 132,
-    paddingVertical: 26,
+    gap: 12,
+    minHeight: 120,
+    paddingVertical: 28,
     paddingHorizontal: 16,
   },
   errorWrap: {
     alignItems: "center",
     gap: 12,
-    paddingVertical: 18,
-    paddingHorizontal: 8,
+    paddingVertical: 20,
+    paddingHorizontal: 12,
   },
   errorIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
   errorTextWrap: {
     alignItems: "center",
-    gap: 5,
-    maxWidth: 360,
+    gap: 4,
+    maxWidth: 320,
   },
   retryButton: {
     minHeight: 40,
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderRadius: 10,
+    paddingHorizontal: 20,
     alignItems: "center",
     justifyContent: "center",
   },
   retryText: {
-    color: "#ffffff",
-    fontSize: 13,
-    fontWeight: "800",
+    fontSize: 14,
+    fontWeight: "600",
   },
   progressTrack: {
-    height: 3,
+    height: 2,
     borderRadius: 999,
     overflow: "hidden",
     width: "100%",

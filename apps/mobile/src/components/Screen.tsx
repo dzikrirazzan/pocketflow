@@ -37,8 +37,8 @@ const styles = StyleSheet.create({
     maxWidth: 720,
     alignSelf: "center",
     flexGrow: 1,
-    paddingTop: 18,
-    paddingBottom: 132,
+    paddingTop: 12,
+    paddingBottom: 120,
     gap: 16,
-  }
+  },
 });

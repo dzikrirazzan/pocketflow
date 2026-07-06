@@ -37,7 +37,9 @@ export default function BudgetsScreen() {
     setLoadError("");
 
     try {
-      const [budgetData, summaryData] = await Promise.all([api.budgets(), api.summary(period)]);
+      const [budgetData, summaryData] = await Promise.all([
+        api.budgets(),
+        api.summary(period)]);
       setBudgets(budgetData.budgets);
       setSummary(summaryData);
     } catch (err: any) {
@@ -228,7 +230,7 @@ export default function BudgetsScreen() {
 
       {budgets.length === 0 ? (
         <View style={styles.emptyCenter}>
-          <Ionicons name="pie-chart-outline" size={48} color={colors.muted} />
+          <Ionicons name="pie-chart-outline" size={36} color={colors.muted} />
           <Text style={[styles.emptyText, { color: colors.muted }]}>Belum ada budget. Silakan tambahkan budget baru di atas.</Text>
         </View>
       ) : (
@@ -259,9 +261,9 @@ export default function BudgetsScreen() {
                       hitSlop={6}
                       disabled={Boolean(deletingBudgetId) || adding}
                       onPress={() => startEditBudget(budget)}
-                      style={[styles.actionBtn, { backgroundColor: theme === "light" ? "#f1f5f9" : "#2c2c2e" }]}
+                      style={[styles.actionBtn, { backgroundColor: theme === "light" ? "#f3f4f6" : "#1f2937" }]}
                     >
-                      <Ionicons name="pencil-outline" size={17} color={colors.ink} />
+                      <Ionicons name="pencil-outline" size={15} color={colors.ink} />
                     </TouchableOpacity>
                     <TouchableOpacity
                       activeOpacity={0.75}
@@ -273,13 +275,13 @@ export default function BudgetsScreen() {
                       {deletingBudgetId === budget.id ? (
                         <ActivityIndicator size="small" color={colors.red} />
                       ) : (
-                        <Ionicons name="trash-outline" size={17} color={colors.red} />
+                        <Ionicons name="trash-outline" size={15} color={colors.red} />
                       )}
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
-              <View style={[styles.track, { backgroundColor: theme === "light" ? "#e2e8f0" : "#2c2c2e" }]}>
+              <View style={[styles.track, { backgroundColor: theme === "light" ? "#f3f4f6" : "#1f2937" }]}>
                 <View 
                   style={[
                     styles.fill, 
@@ -310,26 +312,26 @@ export default function BudgetsScreen() {
 
 const styles = StyleSheet.create({
   header: { marginBottom: 4 },
-  title: { fontSize: 32, fontWeight: "800", letterSpacing: 0 },
-  subtitle: { fontSize: 16, marginTop: 4, letterSpacing: 0, lineHeight: 22 },
+  title: { fontSize: 28, fontWeight: "700", letterSpacing: -0.5 },
+  subtitle: { fontSize: 15, marginTop: 4, letterSpacing: -0.1, lineHeight: 20 },
   form: { gap: 12 },
-  formHeader: { fontWeight: "800", fontSize: 16, marginBottom: 4, letterSpacing: 0 },
+  formHeader: { fontWeight: "600", fontSize: 16, marginBottom: 4, letterSpacing: -0.1 },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
   budgetTextWrap: { flex: 1, minWidth: 0 },
-  name: { fontWeight: "700", fontSize: 16, letterSpacing: 0 },
-  meta: { marginTop: 3, textTransform: "capitalize", fontSize: 12, fontWeight: "500" },
-  amount: { fontWeight: "800", fontSize: 14, letterSpacing: 0, textAlign: "right" },
+  name: { fontWeight: "600", fontSize: 16, letterSpacing: -0.1 },
+  meta: { marginTop: 2, textTransform: "capitalize", fontSize: 12, fontWeight: "400" },
+  amount: { fontWeight: "600", fontSize: 14, letterSpacing: -0.1, textAlign: "right" },
   rightInfo: { alignItems: "flex-end", gap: 8, maxWidth: "52%" },
   actionRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  actionBtn: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  deleteBtn: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  track: { height: 10, borderRadius: 5, overflow: "hidden", marginTop: 14 },
+  actionBtn: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  deleteBtn: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  track: { height: 6, borderRadius: 3, overflow: "hidden", marginTop: 14 },
   fill: { height: "100%" },
   buttonRow: { flexDirection: "row", gap: 10, marginTop: 6 },
   emptyCenter: { alignItems: "center", justifyContent: "center", paddingVertical: 40, gap: 10 },
-  emptyText: { fontWeight: "600", fontSize: 14, textAlign: "center", paddingHorizontal: 20 },
+  emptyText: { fontWeight: "500", fontSize: 14, textAlign: "center", paddingHorizontal: 20 },
   footerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 10, marginTop: 6 },
   footerMeta: { flex: 1, minWidth: 0 },
-  overspentWarning: { color: "#ff3b30", fontWeight: "800", fontSize: 12, letterSpacing: 0 },
-  warningWarning: { color: "#d97706", fontWeight: "800", fontSize: 12, letterSpacing: 0 },
+  overspentWarning: { color: "#ff3b30", fontWeight: "700", fontSize: 12, letterSpacing: -0.1 },
+  warningWarning: { color: "#d97706", fontWeight: "700", fontSize: 12, letterSpacing: -0.1 },
 });

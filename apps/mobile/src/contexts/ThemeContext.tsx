@@ -4,31 +4,31 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 type Theme = "light" | "dark";
 
 export const lightColors = {
-  ink: "#1c1c1e",
-  muted: "#8e8e93",
-  line: "#e5e5ea",
-  bg: "#f2f2f7",
+  ink: "#111111",
+  muted: "#6b7280",
+  line: "#e5e7eb",
+  bg: "#fafafa",
   panel: "#ffffff",
-  blue: "#007aff",
-  teal: "#30b0c7",
-  green: "#34c759",
-  red: "#ff3b30",
-  amber: "#ff9500",
-  violet: "#af52de"
+  blue: "#1a73e8",
+  teal: "#0d9488",
+  green: "#059669",
+  red: "#dc2626",
+  amber: "#d97706",
+  violet: "#7c3aed"
 };
 
 export const darkColors = {
-  ink: "#ffffff",
-  muted: "#98989f",
-  line: "#2c2c2e",
+  ink: "#f9fafb",
+  muted: "#9ca3af",
+  line: "#1f2937",
   bg: "#000000",
-  panel: "#1c1c1e",
-  blue: "#0a84ff",
-  teal: "#64d2ff",
-  green: "#30d158",
-  red: "#ff453a",
-  amber: "#ff9f0a",
-  violet: "#bf5af2"
+  panel: "#111111",
+  blue: "#3b82f6",
+  teal: "#14b8a6",
+  green: "#10b981",
+  red: "#ef4444",
+  amber: "#f59e0b",
+  violet: "#8b5cf6"
 };
 
 type ThemeContextType = {

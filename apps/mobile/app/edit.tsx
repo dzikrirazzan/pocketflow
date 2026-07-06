@@ -183,140 +183,141 @@ export default function EditScreen() {
     styles.chip,
     {
       backgroundColor: isActive
-        ? colors.blue
+        ? colors.ink
         : theme === "light"
-          ? colors.panel
-          : "#2c2c2e",
-      borderColor: isActive ? colors.blue : colors.line,
+          ? "#f3f4f6"
+          : "#1f2937",
+      borderColor: isActive ? colors.ink : colors.line,
     }
   ];
 
   const getChipTextStyle = (isActive: boolean) => [
     styles.chipText,
     {
-      color: isActive ? "#ffffff" : colors.muted,
+      color: isActive
+        ? (theme === "light" ? "#ffffff" : "#000000")
+        : colors.muted,
     }
   ];
 
   return (
     <Screen contentStyle={styles.scrollContent}>
       <TopProgressBar visible={saving} />
-        <View>
-          <Text style={[styles.title, { color: colors.ink }]}>Edit Transaction</Text>
-          <Text style={[styles.subtitle, { color: colors.muted }]}>Ubah detail transaksi kamu.</Text>
-        </View>
+      <View>
+        <Text style={[styles.title, { color: colors.ink }]}>Edit Transaction</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>Ubah detail transaksi kamu.</Text>
+      </View>
 
-        {formError ? (
-          <ErrorState message={formError} onRetry={fetchData} />
-        ) : loadingData ? (
-          <LoadingState title="Menyiapkan data transaksi" subtitle="Memuat wallet, kategori, dan budget terbaru." />
-        ) : (
-          <>
+      {formError ? (
+        <ErrorState message={formError} onRetry={fetchData} />
+      ) : loadingData ? (
+        <LoadingState title="Menyiapkan data transaksi" subtitle="Memuat wallet, kategori, dan budget terbaru." />
+      ) : (
+        <>
+          <Card>
+            <View style={styles.form}>
+              <Segmented value={type} options={["expense", "income", "transfer"]} onChange={setType} />
+              <Field
+                label="Amount (Rp)"
+                value={displayAmount}
+                onChangeText={handleAmountChange}
+                keyboardType="numeric"
+                placeholder="0"
+                error={amountError}
+              />
+              
+              <Field label="Note" value={note} onChangeText={setNote} placeholder="Makan siang" />
+            </View>
+          </Card>
 
-        <Card>
-          <View style={styles.form}>
-            <Segmented value={type} options={["expense", "income", "transfer"]} onChange={setType} />
-            <Field
-              label="Amount (Rp)"
-              value={displayAmount}
-              onChangeText={handleAmountChange}
-              keyboardType="numeric"
-              placeholder="0"
-              error={amountError}
-            />
-            
-            <Field label="Note" value={note} onChangeText={setNote} placeholder="Makan siang" />
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.section, { color: colors.ink }]}>Wallet Asal</Text>
+            {walletError ? <Text style={[styles.sectionError, { color: colors.red }]}>{walletError}</Text> : null}
           </View>
-        </Card>
-
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.section, { color: colors.ink }]}>Wallet Asal</Text>
-          {walletError ? <Text style={[styles.sectionError, { color: colors.red }]}>{walletError}</Text> : null}
-        </View>
-        <View style={styles.chips}>
-          {wallets.map((wallet) => (
-            <Pressable key={wallet.id} hitSlop={4} onPress={() => handleWalletSelect(wallet.id)} style={getChipStyle(walletId === wallet.id)}>
-              <Text numberOfLines={1} style={getChipTextStyle(walletId === wallet.id)}>{wallet.name}</Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {type === "transfer" ? (
-          <>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.section, { color: colors.ink }]}>Wallet Tujuan</Text>
-              {targetWalletError ? <Text style={[styles.sectionError, { color: colors.red }]}>{targetWalletError}</Text> : null}
-            </View>
-            <View style={styles.chips}>
-              {wallets
-                .filter((wallet) => wallet.id !== walletId)
-                .map((wallet) => (
-                  <Pressable key={wallet.id} hitSlop={4} onPress={() => handleTargetWalletSelect(wallet.id)} style={getChipStyle(targetWalletId === wallet.id)}>
-                    <Text numberOfLines={1} style={getChipTextStyle(targetWalletId === wallet.id)}>{wallet.name}</Text>
-                  </Pressable>
-                ))}
-            </View>
-          </>
-        ) : (
-          <>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.section, { color: colors.ink }]}>Kategori</Text>
-              {categoryError ? <Text style={[styles.sectionError, { color: colors.red }]}>{categoryError}</Text> : null}
-            </View>
-            <View style={styles.chips}>
-              {categories
-                .filter((category) => category.kind === type)
-                .map((category) => (
-                  <Pressable key={category.id} hitSlop={4} onPress={() => handleCategorySelect(category.id)} style={getChipStyle(categoryId === category.id)}>
-                    <Text numberOfLines={1} style={getChipTextStyle(categoryId === category.id)}>{category.name}</Text>
-                  </Pressable>
-                ))}
-            </View>
-          </>
-        )}
-
-        {type === "expense" ? (
-          <>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.section, { color: colors.ink }]}>Budget (Opsional)</Text>
-            </View>
-            <View style={styles.chips}>
-              <Pressable hitSlop={4} onPress={() => setBudgetId("")} style={getChipStyle(!budgetId)}>
-                <Text numberOfLines={1} style={getChipTextStyle(!budgetId)}>No budget</Text>
+          <View style={styles.chips}>
+            {wallets.map((wallet) => (
+              <Pressable key={wallet.id} hitSlop={4} onPress={() => handleWalletSelect(wallet.id)} style={getChipStyle(walletId === wallet.id)}>
+                <Text numberOfLines={1} style={getChipTextStyle(walletId === wallet.id)}>{wallet.name}</Text>
               </Pressable>
-              {budgets.map((budget) => (
-                <Pressable key={budget.id} hitSlop={4} onPress={() => setBudgetId(budget.id)} style={getChipStyle(budgetId === budget.id)}>
-                  <Text numberOfLines={1} style={getChipTextStyle(budgetId === budget.id)}>{budget.name}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </>
-        ) : null}
+            ))}
+          </View>
 
-        <View style={styles.buttonRow}>
-          <View style={{ flex: 1 }}>
-            <Button label="Cancel" onPress={() => router.back()} tone="soft" disabled={saving} />
+          {type === "transfer" ? (
+            <>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.section, { color: colors.ink }]}>Wallet Tujuan</Text>
+                {targetWalletError ? <Text style={[styles.sectionError, { color: colors.red }]}>{targetWalletError}</Text> : null}
+              </View>
+              <View style={styles.chips}>
+                {wallets
+                  .filter((wallet) => wallet.id !== walletId)
+                  .map((wallet) => (
+                    <Pressable key={wallet.id} hitSlop={4} onPress={() => handleTargetWalletSelect(wallet.id)} style={getChipStyle(targetWalletId === wallet.id)}>
+                      <Text numberOfLines={1} style={getChipTextStyle(targetWalletId === wallet.id)}>{wallet.name}</Text>
+                    </Pressable>
+                  ))}
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.section, { color: colors.ink }]}>Kategori</Text>
+                {categoryError ? <Text style={[styles.sectionError, { color: colors.red }]}>{categoryError}</Text> : null}
+              </View>
+              <View style={styles.chips}>
+                {categories
+                  .filter((category) => category.kind === type)
+                  .map((category) => (
+                    <Pressable key={category.id} hitSlop={4} onPress={() => handleCategorySelect(category.id)} style={getChipStyle(categoryId === category.id)}>
+                      <Text numberOfLines={1} style={getChipTextStyle(categoryId === category.id)}>{category.name}</Text>
+                    </Pressable>
+                  ))}
+              </View>
+            </>
+          )}
+
+          {type === "expense" ? (
+            <>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.section, { color: colors.ink }]}>Budget (Opsional)</Text>
+              </View>
+              <View style={styles.chips}>
+                <Pressable hitSlop={4} onPress={() => setBudgetId("")} style={getChipStyle(!budgetId)}>
+                  <Text numberOfLines={1} style={getChipTextStyle(!budgetId)}>No budget</Text>
+                </Pressable>
+                {budgets.map((budget) => (
+                  <Pressable key={budget.id} hitSlop={4} onPress={() => setBudgetId(budget.id)} style={getChipStyle(budgetId === budget.id)}>
+                    <Text numberOfLines={1} style={getChipTextStyle(budgetId === budget.id)}>{budget.name}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </>
+          ) : null}
+
+          <View style={styles.buttonRow}>
+            <View style={{ flex: 1 }}>
+              <Button label="Cancel" onPress={() => router.back()} tone="soft" disabled={saving} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button label="Save Changes" onPress={save} loading={saving} disabled={saving} />
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
-            <Button label="Save Changes" onPress={save} loading={saving} disabled={saving} />
-          </View>
-        </View>
-          </>
-        )}
+        </>
+      )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   scrollContent: { gap: 14 },
-  title: { fontSize: 28, fontWeight: "900", letterSpacing: 0 },
-  subtitle: { marginTop: 6, fontSize: 15, letterSpacing: 0, lineHeight: 21 },
+  title: { fontSize: 28, fontWeight: "700", letterSpacing: -0.5 },
+  subtitle: { marginTop: 4, fontSize: 15, letterSpacing: -0.1, lineHeight: 20 },
   form: { gap: 12 },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 10, marginTop: 10 },
-  section: { fontWeight: "900", fontSize: 16, letterSpacing: 0 },
-  sectionError: { flexShrink: 1, fontSize: 12, fontWeight: "700", textAlign: "right" },
+  section: { fontWeight: "600", fontSize: 16, letterSpacing: -0.1 },
+  sectionError: { flexShrink: 1, fontSize: 12, fontWeight: "600", textAlign: "right" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
-  chip: { minHeight: 42, maxWidth: "100%", paddingHorizontal: 14, paddingVertical: 9, borderRadius: 11, borderWidth: 1, justifyContent: "center" },
-  chipText: { fontSize: 13, fontWeight: "700", letterSpacing: 0 },
+  chip: { minHeight: 40, maxWidth: "100%", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, borderWidth: 1, justifyContent: "center" },
+  chipText: { fontSize: 13, fontWeight: "600", letterSpacing: -0.1 },
   buttonRow: { flexDirection: "row", gap: 12, marginTop: 20, marginBottom: 20 },
 });

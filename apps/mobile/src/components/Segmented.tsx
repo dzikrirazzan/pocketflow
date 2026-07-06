@@ -10,40 +10,34 @@ type Props<T extends string> = {
 export function Segmented<T extends string>({ value, options, onChange }: Props<T>) {
   const { colors, theme } = useTheme();
 
-  const wrapStyle = {
-    backgroundColor: theme === "light" ? "#e3e3e9" : "#1c1c1e",
-  };
-
-  const activeItemStyle = {
-    backgroundColor: theme === "light" ? "#ffffff" : "#2c2c2e",
-    shadowColor: theme === "light" ? "#000" : "transparent",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: theme === "light" ? 0.08 : 0,
-    shadowRadius: 1.5,
-    elevation: theme === "light" ? 1 : 0,
-  };
-
   return (
-    <View style={[styles.wrap, wrapStyle]}>
+    <View style={[styles.wrap, { backgroundColor: theme === "light" ? "#f3f4f6" : "#1f2937" }]}>
       {options.map((option) => {
         const isActive = value === option;
         return (
-          <Pressable 
-            key={option} 
+          <Pressable
+            key={option}
             accessibilityRole="button"
             accessibilityState={{ selected: isActive }}
             hitSlop={4}
-            onPress={() => onChange(option)} 
-            style={[styles.item, isActive && activeItemStyle]}
+            onPress={() => onChange(option)}
+            style={[
+              styles.item,
+              isActive && {
+                backgroundColor: colors.panel,
+                shadowColor: theme === "light" ? "#000" : "transparent",
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: theme === "light" ? 0.08 : 0,
+                shadowRadius: 3,
+                elevation: theme === "light" ? 2 : 0,
+              },
+            ]}
           >
-            <Text 
+            <Text
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.82}
-              style={[
-                styles.label, 
-                { color: isActive ? colors.ink : colors.muted }
-              ]}
+              style={[styles.label, { color: isActive ? colors.ink : colors.muted }]}
             >
               {option}
             </Text>
@@ -57,18 +51,18 @@ export function Segmented<T extends string>({ value, options, onChange }: Props<
 const styles = StyleSheet.create({
   wrap: {
     flexDirection: "row",
-    minHeight: 44,
-    padding: 4,
-    borderRadius: 12,
-    gap: 4,
+    minHeight: 40,
+    padding: 3,
+    borderRadius: 10,
+    gap: 2,
     width: "100%",
   },
   item: {
     flex: 1,
-    minHeight: 36,
+    minHeight: 34,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 9,
+    borderRadius: 8,
     paddingHorizontal: 8,
     minWidth: 0,
   },
@@ -76,6 +70,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     textTransform: "capitalize",
-    letterSpacing: 0,
+    letterSpacing: -0.1,
   },
 });

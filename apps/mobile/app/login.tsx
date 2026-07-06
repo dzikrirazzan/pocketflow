@@ -9,7 +9,7 @@ import { Button } from "@/components/Button";
 
 export default function LoginScreen() {
   const { signIn, signUp } = useAuth();
-  const { colors, theme } = useTheme();
+  const { colors } = useTheme();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,11 +60,11 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen>
+    <Screen contentStyle={styles.center}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.teal }]}>PocketFlow</Text>
-          <Text style={[styles.subtitle, { color: colors.muted }]}>Kelola keuanganmu dengan mudah</Text>
+          <Text style={[styles.title, { color: colors.ink }]}>PocketFlow</Text>
+          <Text style={[styles.subtitle, { color: colors.muted }]}>Kelola keuanganmu dengan tenang.</Text>
         </View>
 
         <Card>
@@ -115,27 +115,36 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  center: {
     justifyContent: "center",
+    flexGrow: 1,
+    paddingBottom: 40,
+  },
+  container: {
+    width: "100%",
+    maxWidth: 400,
+    alignSelf: "center",
   },
   header: {
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: 40,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "800",
+    fontSize: 40,
+    fontWeight: "700",
+    letterSpacing: -1,
   },
   subtitle: {
     fontSize: 16,
-    marginTop: 4,
+    fontWeight: "400",
+    marginTop: 6,
+    textAlign: "center",
   },
   form: {
-    gap: 12,
+    gap: 16,
   },
   buttons: {
     gap: 12,
-    marginTop: 8,
+    marginTop: 12,
   },
 });

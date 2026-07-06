@@ -86,7 +86,7 @@ export default function ReportsScreen() {
                   <Text numberOfLines={1} style={[styles.name, { color: colors.ink }]}>{item.categoryName ?? "Uncategorized"}</Text>
                   <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82} style={[styles.amount, { color: colors.ink }]}>{rupiah(total)}</Text>
                 </View>
-                <View style={[styles.track, { backgroundColor: theme === "light" ? "#e2e8f0" : "#2c2c2e" }]}>
+                <View style={[styles.track, { backgroundColor: theme === "light" ? "#f3f4f6" : "#1f2937" }]}>
                   <View
                     style={[
                       styles.fill,
@@ -122,18 +122,18 @@ export default function ReportsScreen() {
 
 const styles = StyleSheet.create({
   header: { marginBottom: 4 },
-  title: { fontSize: 32, fontWeight: "800", letterSpacing: 0 },
-  subtitle: { fontSize: 16, marginTop: 4, letterSpacing: 0, lineHeight: 22 },
+  title: { fontSize: 28, fontWeight: "700", letterSpacing: -0.5 },
+  subtitle: { fontSize: 15, marginTop: 4, letterSpacing: -0.1, lineHeight: 20 },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", gap: 16 },
-  label: { fontWeight: "700", marginBottom: 6, fontSize: 13, letterSpacing: 0 },
-  good: { fontSize: 18, fontWeight: "900", letterSpacing: 0 },
-  bad: { fontSize: 18, fontWeight: "900", letterSpacing: 0 },
+  label: { fontWeight: "600", marginBottom: 6, fontSize: 13, letterSpacing: -0.1 },
+  good: { fontSize: 18, fontWeight: "700", letterSpacing: -0.2 },
+  bad: { fontSize: 18, fontWeight: "700", letterSpacing: -0.2 },
   netBox: { marginTop: 18, paddingTop: 18, borderTopWidth: 1 },
-  net: { fontSize: 26, fontWeight: "900", letterSpacing: 0 },
-  section: { fontWeight: "800", fontSize: 17, marginTop: 16, marginBottom: 4, letterSpacing: 0 },
+  net: { fontSize: 24, fontWeight: "700", letterSpacing: -0.5 },
+  section: { fontWeight: "600", fontSize: 16, marginTop: 16, marginBottom: 4, letterSpacing: -0.1 },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 12 },
-  name: { flex: 1, minWidth: 0, fontWeight: "700", fontSize: 15, letterSpacing: 0 },
-  amount: { flexShrink: 0, maxWidth: "48%", fontWeight: "800", fontSize: 15, letterSpacing: 0, textAlign: "right" },
-  track: { height: 10, borderRadius: 5, overflow: "hidden", marginTop: 12 },
+  name: { flex: 1, minWidth: 0, fontWeight: "600", fontSize: 15, letterSpacing: -0.1 },
+  amount: { flexShrink: 0, maxWidth: "48%", fontWeight: "700", fontSize: 15, letterSpacing: -0.2, textAlign: "right" },
+  track: { height: 6, borderRadius: 3, overflow: "hidden", marginTop: 12 },
   fill: { height: "100%" },
 });
