@@ -623,7 +623,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
   if (!config.isConfigured) {
     return (
       <main className="site-shell">
-        <ProductNav mode="marketing" theme={theme} onToggleTheme={toggleTheme} />
+        <ProductNav mode="marketing" showMarketingLinks={false} theme={theme} onToggleTheme={toggleTheme} />
         <section className="auth-state-section">
           <div className="auth-card system-card">
             <div className="brand-lockup">
@@ -645,7 +645,7 @@ export function PocketFlowWebApp({ config }: { config: AppConfig }) {
   if (authLoading) {
     return (
       <main className="site-shell">
-        <ProductNav mode="marketing" theme={theme} onToggleTheme={toggleTheme} />
+        <ProductNav mode="marketing" showMarketingLinks={false} theme={theme} onToggleTheme={toggleTheme} />
         <section className="auth-state-section">
           <div className="auth-card compact-card system-card">
             <div className="skeleton-stack" aria-hidden="true">
@@ -1173,6 +1173,7 @@ function ProductNav({
   activeView,
   email,
   mode,
+  showMarketingLinks = true,
   onNavigate,
   onSignOut,
   theme,
@@ -1181,6 +1182,7 @@ function ProductNav({
   activeView?: ViewKey;
   email?: string;
   mode: "marketing" | "app";
+  showMarketingLinks?: boolean;
   onNavigate?: (view: ViewKey) => void;
   onSignOut?: () => void;
   theme: ThemeMode;
@@ -1200,7 +1202,7 @@ function ProductNav({
         </div>
       )}
 
-      {mode === "marketing" ? (
+      {mode === "marketing" && showMarketingLinks ? (
         <nav className="nav-links" aria-label="PocketFlow website navigation">
           <a href="#features">Features</a>
           <a href="#auth-panel">Login</a>
@@ -1229,11 +1231,11 @@ function ProductNav({
           <button className="ghost-button" type="button" onClick={onSignOut}>
             Sign out
           </button>
-        ) : (
+        ) : showMarketingLinks ? (
           <a className="primary-button nav-cta" href="#auth-panel">
             Open app
           </a>
-        )}
+        ) : null}
       </div>
     </header>
   );
